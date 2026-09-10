@@ -16,12 +16,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ProfileService {
   private final EmployeeRepository employeeRepository;
-  private final MessageService messageService;
 
   @Transactional
   public GetMyProfileOutputDTO getMyProfile(GetMyProfileInputDTO input){
     EmployeeEntity employee = employeeRepository.findByIdAndStatus(input.id(), EmployeeStatusEnum.ACTIVE).orElseThrow(
-        () -> new NotFoundException(messageService.getMessage("exception.profile.not-found"))
+        () -> new NotFoundException("exception.profile.not-found")
     );
 
     return ProfileMapper.convertEntityToGetProfileOutput(employee);

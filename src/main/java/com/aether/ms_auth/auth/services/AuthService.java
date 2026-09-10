@@ -36,7 +36,6 @@ public class AuthService {
   private final GeneratedCodesRepository generatedCodesRepository;
 
   private final PasswordEncoder passwordEncoder;
-  private final MessageService messageService;
   private final BrevoService brevoService;
 
   private final Random random;
@@ -51,7 +50,7 @@ public class AuthService {
     );
 
     EmployeeEntity employee = employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElseThrow(
-        () -> new BadRequestException(messageService.getMessage("exception.login.invalid"))
+        () -> new BadRequestException("exception.login.invalid")
     );
 
     return tokenProvider.createAccessToken(
@@ -62,7 +61,7 @@ public class AuthService {
 
   public LoginOutputDTO refreshToken(RefreshTokenInputDTO input){
     employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElseThrow(
-        () -> new BadRequestException(messageService.getMessage("exception.login.invalid"))
+        () -> new BadRequestException("exception.login.invalid")
     );
 
     return tokenProvider.refreshToken(input.refreshToken());
@@ -101,7 +100,7 @@ public class AuthService {
 
       employeeRepository.save(employee);
     } else throw new UnauthorizedException(
-          messageService.getMessage("exception.validate-key.invalid")
+          "exception.validate-key.invalid"
       );
   }
 
