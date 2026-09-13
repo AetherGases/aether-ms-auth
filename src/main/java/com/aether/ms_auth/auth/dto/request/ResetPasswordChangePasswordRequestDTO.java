@@ -24,8 +24,8 @@ public record ResetPasswordChangePasswordRequestDTO(
         message = "{validation.key.size}"
     )
     @Schema(
-        description = "A chave gerada pela rota /api/auth/",
-        example = "aether@dominio.com"
+        description = "A chave UUID gerada pela rota /api/auth/validate-code",
+        example = "53a649a9-4a7a-451b-933a-ab7012b95f51"
     )
     String key,
 
