@@ -1,19 +1,17 @@
 package com.aether.ms_auth.auth;
 
-import com.aether.ms_auth.auth.dto.input.LoginInputDTO;
-import com.aether.ms_auth.auth.dto.input.RefreshTokenInputDTO;
-import com.aether.ms_auth.auth.dto.input.ResetPasswordChangePasswordInputDTO;
-import com.aether.ms_auth.auth.dto.input.ResetPasswordSendCodeInputDTO;
+import com.aether.ms_auth.auth.dto.input.*;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
+import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
 import com.aether.ms_auth.auth.services.AuthService;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.BadRequestException;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
 import com.aether.ms_auth.shared.helpers.interfaces.BrevoTemplate;
-import com.aether.ms_auth.shared.persistence.redis.entities.GeneratedCodesDocument;
-import com.aether.ms_auth.shared.persistence.redis.repositories.GeneratedCodesRepository;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
+import com.aether.ms_auth.shared.persistence.redis.entities.GeneratedCodesDocument;
+import com.aether.ms_auth.shared.persistence.redis.repositories.GeneratedCodesRepository;
 import com.aether.ms_auth.shared.security.jwt.JwtTokenProvider;
 import com.aether.ms_auth.shared.services.BrevoService;
 import com.aether.ms_auth.shared.services.MessageService;
@@ -28,14 +26,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -244,6 +237,7 @@ public class AuthServiceTests {
   @Test
   @DisplayName("Should not send if the user already has a code")
   void resetPasswordSendCodeWhenCodeAlreadyExists() {
+    String code = "123456";
     ResetPasswordSendCodeInputDTO input =
         new ResetPasswordSendCodeInputDTO("test@gmail.com");
 
@@ -251,8 +245,6 @@ public class AuthServiceTests {
     employee.setName("Test");
     employee.setEmail(input.email());
     employee.setStatus(EmployeeStatusEnum.ACTIVE);
-
-    String code = "123456";
 
     GeneratedCodesDocument existingCode = new GeneratedCodesDocument(
         employee.getId(),
@@ -277,13 +269,101 @@ public class AuthServiceTests {
   }
 
   @Test
-  @DisplayName("Should change password when key is correct")
-  void changePasswordWhenKeyIsCorrect() {
-    ResetPasswordChangePasswordInputDTO input =
-        new ResetPasswordChangePasswordInputDTO(
+  @DisplayName("Should throw a unauthorized exception when email is incorrect")
+  void resetPasswordValidateCodeWhenEmailIsNotFounded() {
+    String code = "123456";
+
+    ResetPasswordValidateCodeInputDTO input =
+        new ResetPasswordValidateCodeInputDTO("test@gmail.com", code);
+
+    EmployeeEntity employee = new EmployeeEntity();
+    employee.setName("Test");
+    employee.setEmail(input.email());
+    employee.setStatus(EmployeeStatusEnum.ACTIVE);
+
+    GeneratedCodesDocument existingCode = new GeneratedCodesDocument(
+        employee.getId(),
+        employee.getEmail(),
+        code
+    );
+
+    when(employeeRepository.findByEmailAndStatus(
+        input.email(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.ofNullable(null));
+
+    when(generatedCodesRepository.findByEmail(input.email()))
+        .thenReturn(existingCode);
+
+    assertThrows(UnauthorizedException.class, () -> authService.validateCode(input));
+  }
+
+  @Test
+  @DisplayName("Should throw a unauthorized exception when code does not exists")
+  void resetPasswordValidateCodeWhenCodeIsNotFounded() {
+    String code = "123456";
+
+    ResetPasswordValidateCodeInputDTO input =
+        new ResetPasswordValidateCodeInputDTO("test@gmail.com", code);
+
+    EmployeeEntity employee = new EmployeeEntity();
+    employee.setName("Test");
+    employee.setEmail(input.email());
+    employee.setStatus(EmployeeStatusEnum.ACTIVE);
+
+    when(employeeRepository.findByEmailAndStatus(
+        input.email(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.of(employee));
+
+    when(generatedCodesRepository.findByEmail(input.email()))
+        .thenReturn(null);
+
+    assertThrows(UnauthorizedException.class, () -> authService.validateCode(input));
+  }
+
+  @Test
+  @DisplayName("Should throw a unauthorized exception when code is incorrect")
+  void resetPasswordValidateCodeWhenCodeIsIncorrect() {
+    String code = "123456";
+    String incorrectCode = "12312";
+
+    ResetPasswordValidateCodeInputDTO input =
+        new ResetPasswordValidateCodeInputDTO("test@gmail.com", incorrectCode);
+
+    EmployeeEntity employee = new EmployeeEntity();
+    employee.setName("Test");
+    employee.setEmail(input.email());
+    employee.setStatus(EmployeeStatusEnum.ACTIVE);
+
+    GeneratedCodesDocument existingCode = new GeneratedCodesDocument(
+        employee.getId(),
+        employee.getEmail(),
+        code
+    );
+
+    when(employeeRepository.findByEmailAndStatus(
+        input.email(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.of(employee));
+
+    when(generatedCodesRepository.findByEmail(input.email()))
+        .thenReturn(existingCode);
+
+    when(passwordEncoder.matches(any(), any())).thenReturn(false);
+
+    assertThrows(UnauthorizedException.class, () -> authService.validateCode(input));
+  }
+
+  @Test
+  @DisplayName("Should return a key based in UUID when code is right")
+  void resetPasswordValidateCodeWhenCodeIsCorrect() {
+    String code = "123456";
+
+    ResetPasswordValidateCodeInputDTO input =
+        new ResetPasswordValidateCodeInputDTO(
             "test@gmail.com",
-            "valid-key",
-            "NewPassword123"
+            code
         );
 
     EmployeeEntity employee = new EmployeeEntity();
@@ -295,10 +375,8 @@ public class AuthServiceTests {
         new GeneratedCodesDocument(
             employee.getId(),
             employee.getEmail(),
-            "123456"
+            code
         );
-
-    existingCode.setKey(input.key());
 
     when(employeeRepository.findByEmailAndStatus(
         input.email(),
@@ -308,23 +386,22 @@ public class AuthServiceTests {
     when(generatedCodesRepository.findByEmail(input.email()))
         .thenReturn(existingCode);
 
-    when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+    when(passwordEncoder.matches(any(), any()))
+        .thenReturn(true);
 
-    when(passwordEncoder.encode(input.password()))
-        .thenReturn("encoded-password");
+    when(generatedCodesRepository.save(existingCode))
+        .thenReturn(existingCode);
 
-    authService.changePassword(input);
+    ResetPasswordValidateCodeOutputDTO output =
+        authService.validateCode(input);
 
-    assertEquals("encoded-password", employee.getPasswordHash());
+    assertNotNull(output.key());
 
-    verify(generatedCodesRepository)
-        .deleteByEmail(input.email());
+    assertDoesNotThrow(
+        () -> UUID.fromString(output.key())
+    );
 
-    verify(passwordEncoder)
-        .encode(input.password());
-
-    verify(employeeRepository)
-        .save(employee);
+    verify(generatedCodesRepository).save(existingCode);
   }
 
   @Test
@@ -446,5 +523,56 @@ public class AuthServiceTests {
 
     verify(passwordEncoder, never())
         .encode(anyString());
+  }
+
+  @Test
+  @DisplayName("Should change password when key is correct")
+  void changePasswordWhenKeyIsCorrect() {
+    ResetPasswordChangePasswordInputDTO input =
+        new ResetPasswordChangePasswordInputDTO(
+            "test@gmail.com",
+            "valid-key",
+            "NewPassword123"
+        );
+
+    EmployeeEntity employee = new EmployeeEntity();
+    employee.setName("Test");
+    employee.setEmail(input.email());
+    employee.setStatus(EmployeeStatusEnum.ACTIVE);
+
+    GeneratedCodesDocument existingCode =
+        new GeneratedCodesDocument(
+            employee.getId(),
+            employee.getEmail(),
+            "123456"
+        );
+
+    existingCode.setKey(input.key());
+
+    when(employeeRepository.findByEmailAndStatus(
+        input.email(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.of(employee));
+
+    when(generatedCodesRepository.findByEmail(input.email()))
+        .thenReturn(existingCode);
+
+    when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+
+    when(passwordEncoder.encode(input.password()))
+        .thenReturn("encoded-password");
+
+    authService.changePassword(input);
+
+    assertEquals("encoded-password", employee.getPasswordHash());
+
+    verify(generatedCodesRepository)
+        .deleteByEmail(input.email());
+
+    verify(passwordEncoder)
+        .encode(input.password());
+
+    verify(employeeRepository)
+        .save(employee);
   }
 }
