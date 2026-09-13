@@ -23,8 +23,9 @@ public class ProfileMapper {
     return new GetMyProfileOutputDTO(
         entity.getId(),
         NormalizeOutput.cpf(entity.getCpf()),
-        entity.getEmail(),
+        NormalizeOutput.email(entity.getEmail()),
         NormalizeOutput.name(entity.getName()),
+        NormalizeOutput.phone(entity.getPhone()),
         permissions
     );
   }
@@ -35,20 +36,21 @@ public class ProfileMapper {
         NormalizeInput.name(request.name()),
         NormalizeInput.phone(request.phone()),
         NormalizeInput.password(request.newPassword()),
-        new UpdateProfileInputDTO.Image(
+        request.image() != null
+            ? new UpdateProfileInputDTO.Image(
             request.image().imageName(),
             request.image().imageUrl()
-        )
+        ) : null
     );
   }
 
   public static UpdateProfileOutputDTO convertEntityToUpdateProfileOutput(EmployeeEntity entity){
     return new UpdateProfileOutputDTO(
         entity.getId(),
-        entity.getName(),
-        entity.getCpf(),
-        entity.getEmail(),
-        entity.getPhone()
+        NormalizeOutput.name(entity.getName()),
+        NormalizeOutput.cpf(entity.getCpf()),
+        NormalizeOutput.email(entity.getEmail()),
+        NormalizeOutput.phone(entity.getPhone())
     );
   }
 }

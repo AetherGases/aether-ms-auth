@@ -24,7 +24,6 @@ public record UpdateProfileRequestDTO(
     )
     String name,
 
-    @NotEmpty(message = "{validation.phone.required}")
     @Pattern(
         regexp = RegexPatterns.PHONE,
         message = "{validation.phone.regex}"
