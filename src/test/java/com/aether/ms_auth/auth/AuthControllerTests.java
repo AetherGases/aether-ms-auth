@@ -3,9 +3,11 @@ package com.aether.ms_auth.auth;
 import com.aether.ms_auth.auth.controllers.AuthController;
 import com.aether.ms_auth.auth.dto.input.ResetPasswordSendCodeInputDTO;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
+import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
 import com.aether.ms_auth.auth.dto.request.LoginRequestDTO;
 import com.aether.ms_auth.auth.dto.request.ResetPasswordChangePasswordRequestDTO;
 import com.aether.ms_auth.auth.dto.request.ResetPasswordSendCodeRequestDTO;
+import com.aether.ms_auth.auth.dto.request.ResetPasswordValidateCodeRequestDTO;
 import com.aether.ms_auth.auth.services.AuthService;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
 import com.aether.ms_auth.shared.services.MessageService;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Date;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -130,6 +133,90 @@ public class AuthControllerTests {
 
   @Test
   @DisplayName("Should return 401 when email is not found")
+  void validateCodeWhenEmailIsNotFound() throws Exception {
+    ResetPasswordValidateCodeRequestDTO request =
+        new ResetPasswordValidateCodeRequestDTO(
+            "test@gmail.com",
+            "123456"
+        );
+
+    when(authService.validateCode(any()))
+        .thenThrow(new UnauthorizedException("Email not found"));
+
+    mockMvc.perform(post("/api/auth/reset-password/validate-code")
+            .contentType("application/json")
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("Should return 401 when code does not exist")
+  void validateCodeWhenCodeIsNotFound() throws Exception {
+    ResetPasswordValidateCodeRequestDTO request =
+        new ResetPasswordValidateCodeRequestDTO(
+            "test@gmail.com",
+            "123456"
+        );
+
+    when(authService.validateCode(any()))
+        .thenThrow(new UnauthorizedException("Code not found"));
+
+    mockMvc.perform(post("/api/auth/reset-password/validate-code")
+            .contentType("application/json")
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isUnauthorized());
+
+    verify(authService).validateCode(any());
+  }
+
+  @Test
+  @DisplayName("Should return 401 when code is incorrect")
+  void validateCodeWhenCodeIsIncorrect() throws Exception {
+    ResetPasswordValidateCodeRequestDTO request =
+        new ResetPasswordValidateCodeRequestDTO(
+            "test@gmail.com",
+            "123172"
+        );
+
+    when(authService.validateCode(any()))
+        .thenThrow(new UnauthorizedException("Invalid code"));
+
+    mockMvc.perform(post("/api/auth/reset-password/validate-code")
+            .contentType("application/json")
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isUnauthorized());
+
+    verify(authService).validateCode(any());
+  }
+
+  @Test
+  @DisplayName("Should return 200 and key when code is correct")
+  void validateCodeWhenCodeIsCorrect() throws Exception {
+    ResetPasswordValidateCodeRequestDTO request =
+        new ResetPasswordValidateCodeRequestDTO(
+            "test@gmail.com",
+            "123456"
+        );
+
+    ResetPasswordValidateCodeOutputDTO output =
+        new ResetPasswordValidateCodeOutputDTO(
+            UUID.randomUUID().toString()
+        );
+
+    when(authService.validateCode(any()))
+        .thenReturn(output);
+
+    mockMvc.perform(post("/api/auth/reset-password/validate-code")
+            .contentType("application/json")
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.key").value(output.key()));
+
+    verify(authService).validateCode(any());
+  }
+
+  @Test
+  @DisplayName("Should return 401 when email is not found")
   void changePasswordWhenEmailIsNotFound() throws Exception {
     ResetPasswordChangePasswordRequestDTO request =
         new ResetPasswordChangePasswordRequestDTO(
@@ -195,7 +282,7 @@ public class AuthControllerTests {
   }
 
   @Test
-  @DisplayName("Should return 200 when password is changed")
+  @DisplayName("Should return 204 when password is changed")
   void changePasswordWhenDataIsCorrect() throws Exception {
     ResetPasswordChangePasswordRequestDTO request =
         new ResetPasswordChangePasswordRequestDTO(

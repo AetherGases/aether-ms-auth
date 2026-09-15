@@ -3,6 +3,7 @@ package com.aether.ms_auth.auth.services;
 import com.aether.ms_auth.auth.dto.input.*;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
 import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
+import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
 import com.aether.ms_auth.auth.mappers.AuthMapper;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.BadRequestException;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -86,6 +88,23 @@ public class AuthService {
       brevoService.send(new SendCodeTemplate(NormalizeOutput.name(employee.getName()), code), employee.getEmail());
     }
   }
+
+  public ResetPasswordValidateCodeOutputDTO validateCode(ResetPasswordValidateCodeInputDTO input){
+    EmployeeEntity employee = employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElse(null);
+    GeneratedCodesDocument codeDocument = generatedCodesRepository.findByEmail(input.email());
+
+    if (employee != null && codeDocument != null && passwordEncoder.matches(input.code(), codeDocument.getCode())){
+
+      String key = UUID.randomUUID().toString();
+
+      codeDocument.setKey(passwordEncoder.encode(key));
+
+      generatedCodesRepository.save(codeDocument);
+
+      return new ResetPasswordValidateCodeOutputDTO(key);
+    } else throw new UnauthorizedException("exception.validate-code.invalid");
+  }
+
 
 
   @Transactional

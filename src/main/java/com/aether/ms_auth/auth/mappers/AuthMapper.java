@@ -1,14 +1,8 @@
 package com.aether.ms_auth.auth.mappers;
 
-import com.aether.ms_auth.auth.dto.input.LoginInputDTO;
-import com.aether.ms_auth.auth.dto.input.RegisterInputDTO;
-import com.aether.ms_auth.auth.dto.input.ResetPasswordChangePasswordInputDTO;
-import com.aether.ms_auth.auth.dto.input.ResetPasswordSendCodeInputDTO;
+import com.aether.ms_auth.auth.dto.input.*;
 import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
-import com.aether.ms_auth.auth.dto.request.LoginRequestDTO;
-import com.aether.ms_auth.auth.dto.request.RegisterRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordChangePasswordRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordSendCodeRequestDTO;
+import com.aether.ms_auth.auth.dto.request.*;
 import com.aether.ms_auth.shared.helpers.NormalizeInput;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 
@@ -23,6 +17,13 @@ public class AuthMapper {
   public static ResetPasswordSendCodeInputDTO convertSendCodeRequestToInput(ResetPasswordSendCodeRequestDTO request){
     return new ResetPasswordSendCodeInputDTO(
         NormalizeInput.email(request.email())
+    );
+  }
+
+  public static ResetPasswordValidateCodeInputDTO convertValidateCodeRequestToInput(ResetPasswordValidateCodeRequestDTO request){
+    return new ResetPasswordValidateCodeInputDTO(
+        NormalizeInput.email(request.email()),
+        request.code()
     );
   }
 
