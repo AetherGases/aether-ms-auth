@@ -10,7 +10,6 @@ import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionGroupEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
-import com.aether.ms_auth.shared.services.MessageService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,9 +32,6 @@ import static org.mockito.Mockito.when;
 public class ProfileServiceTests {
   @Mock
   private EmployeeRepository employeeRepository;
-
-  @Mock
-  private MessageService messageService;
 
   @InjectMocks
   private ProfileService profileService;

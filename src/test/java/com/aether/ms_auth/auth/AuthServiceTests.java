@@ -48,9 +48,6 @@ public class AuthServiceTests {
 
   @Mock
   private JwtTokenProvider tokenProvider;
-
-  @Mock
-  private MessageService messageService;
   @Mock
   private BrevoService brevoService;
 
@@ -116,9 +113,6 @@ public class AuthServiceTests {
     when(employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.empty());
 
-    when(messageService.getMessage("exception.login.invalid"))
-        .thenReturn("Usuário inexistente ou senha inválida");
-
     assertThrows(BadRequestException.class, () -> authService.login(input));
   }
 
@@ -167,9 +161,6 @@ public class AuthServiceTests {
 
     when(employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.empty());
-
-    when(messageService.getMessage("exception.login.invalid"))
-        .thenReturn("Usuário inexistente ou senha inválida");
 
     assertThrows(BadRequestException.class, () -> authService.refreshToken(input));
   }

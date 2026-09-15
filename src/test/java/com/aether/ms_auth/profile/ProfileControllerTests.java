@@ -19,8 +19,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import tools.jackson.databind.ObjectMapper;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;

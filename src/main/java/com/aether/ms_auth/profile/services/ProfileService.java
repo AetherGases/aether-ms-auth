@@ -7,7 +7,6 @@ import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.NotFoundException;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
-import com.aether.ms_auth.shared.services.MessageService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
