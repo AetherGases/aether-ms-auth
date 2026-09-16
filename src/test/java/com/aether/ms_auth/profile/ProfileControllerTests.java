@@ -1,5 +1,6 @@
 package com.aether.ms_auth.profile;
 
+import com.aether.ms_auth.profile.dto.request.UpdateProfileRequestDTO;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.helpers.NormalizeOutput;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
@@ -8,8 +9,9 @@ import com.aether.ms_auth.shared.security.jwt.JwtTokenProvider;
 import com.aether.ms_auth.shared.services.MessageService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
-
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -151,5 +154,93 @@ class ProfileControllerTests {
     Date expiration = new Date(now.getTime() - 1000);
     String token = JWT.create().withClaim("roles", List.of()).withIssuedAt(new Date(now.getTime() - 2000)).withExpiresAt(expiration).withSubject(employeeActive.getEmail()).sign(algorithm);
     mockMvc.perform(get("/api/profile").header("Authorization", "Bearer " + token)).andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("Should update profile successfully")
+  void updateProfileSuccess() throws Exception {
+    String token = generateJwt(employeeActive);
+
+    String body = new ObjectMapper().writeValueAsString(
+        new UpdateProfileRequestDTO("Novo Nome", "11988887777", null, null)
+    );
+
+    mockMvc.perform(
+            patch("/api/profile")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value(NormalizeOutput.name("Novo Nome")))
+        .andExpect(jsonPath("$.phone").value("(11) 98888-7777"));
+  }
+
+  @Test
+  @DisplayName("Should update password successfully")
+  void updateProfilePasswordSuccess() throws Exception {
+    String token = generateJwt(employeeActive);
+
+    String body = new ObjectMapper().writeValueAsString(
+        new UpdateProfileRequestDTO(null, null, "novaSenha123", null)
+    );
+
+    mockMvc.perform(
+            patch("/api/profile")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isOk());
+
+    EmployeeEntity updated = employeeRepository.findById(employeeActive.getId()).orElseThrow();
+    Assertions.assertTrue(passwordEncoder.matches("novaSenha123", updated.getPasswordHash()));
+  }
+
+  @Test
+  @DisplayName("Should return 404 when employee is inactive")
+  void updateProfileInactiveEmployee() throws Exception {
+    String token = generateJwt(employeeActive);
+
+    employeeActive.setStatus(EmployeeStatusEnum.INACTIVE);
+    employeeRepository.save(employeeActive);
+
+    String body = new ObjectMapper().writeValueAsString(
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null)
+    );
+
+    mockMvc.perform(
+            patch("/api/profile")
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("Should return 401 when JWT is not provided")
+  void updateProfileWithoutAuthentication() throws Exception {
+    String body = new ObjectMapper().writeValueAsString(
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null)
+    );
+
+    mockMvc.perform(
+            patch("/api/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("Should return 401 when JWT is invalid")
+  void updateProfileWithInvalidToken() throws Exception {
+    String body = new ObjectMapper().writeValueAsString(
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null)
+    );
+
+    mockMvc.perform(
+            patch("/api/profile")
+                .header("Authorization", "Bearer token-invalido")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+        .andExpect(status().isUnauthorized());
   }
 }

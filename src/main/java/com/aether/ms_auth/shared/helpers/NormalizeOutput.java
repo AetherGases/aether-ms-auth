@@ -17,6 +17,32 @@ public class NormalizeOutput {
     );
   }
 
+  public static String phone(String phone){
+    if (phone == null || phone.isBlank()) return phone;
+
+    String digits = phone.replaceAll("\\D", "");
+
+    if (digits.length() == 11) {
+      return String.format(
+          "(%s) %s-%s",
+          digits.substring(0, 2),
+          digits.substring(2, 7),
+          digits.substring(7, 11)
+      );
+    }
+
+    if (digits.length() == 10) {
+      return String.format(
+          "(%s) %s-%s",
+          digits.substring(0, 2),
+          digits.substring(2, 6),
+          digits.substring(6, 10)
+      );
+    }
+
+    return phone;
+  }
+
   public static String email(String email){
     if (email == null || email.isBlank()) return email;
 
