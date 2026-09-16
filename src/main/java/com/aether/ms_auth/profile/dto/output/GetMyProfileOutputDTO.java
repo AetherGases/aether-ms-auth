@@ -7,6 +7,7 @@ public record GetMyProfileOutputDTO(
     String cpf,
     String email,
     String name,
+    String phone,
     List<GetMyProfileInfosOutputDTO.Permission> permissions
 ) {
 }

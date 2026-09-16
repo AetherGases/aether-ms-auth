@@ -3,6 +3,7 @@ package com.aether.ms_auth.auth.services;
 import com.aether.ms_auth.auth.dto.input.*;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
 import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
+import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
 import com.aether.ms_auth.auth.mappers.AuthMapper;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.BadRequestException;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,6 @@ public class AuthService {
   private final GeneratedCodesRepository generatedCodesRepository;
 
   private final PasswordEncoder passwordEncoder;
-  private final MessageService messageService;
   private final BrevoService brevoService;
 
   private final Random random;
@@ -51,7 +52,7 @@ public class AuthService {
     );
 
     EmployeeEntity employee = employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElseThrow(
-        () -> new BadRequestException(messageService.getMessage("exception.login.invalid"))
+        () -> new BadRequestException("exception.login.invalid")
     );
 
     return tokenProvider.createAccessToken(
@@ -62,7 +63,7 @@ public class AuthService {
 
   public LoginOutputDTO refreshToken(RefreshTokenInputDTO input){
     employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElseThrow(
-        () -> new BadRequestException(messageService.getMessage("exception.login.invalid"))
+        () -> new BadRequestException("exception.login.invalid")
     );
 
     return tokenProvider.refreshToken(input.refreshToken());
@@ -88,6 +89,23 @@ public class AuthService {
     }
   }
 
+  public ResetPasswordValidateCodeOutputDTO validateCode(ResetPasswordValidateCodeInputDTO input){
+    EmployeeEntity employee = employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElse(null);
+    GeneratedCodesDocument codeDocument = generatedCodesRepository.findByEmail(input.email());
+
+    if (employee != null && codeDocument != null && passwordEncoder.matches(input.code(), codeDocument.getCode())){
+
+      String key = UUID.randomUUID().toString();
+
+      codeDocument.setKey(passwordEncoder.encode(key));
+
+      generatedCodesRepository.save(codeDocument);
+
+      return new ResetPasswordValidateCodeOutputDTO(key);
+    } else throw new UnauthorizedException("exception.validate-code.invalid");
+  }
+
+
 
   @Transactional
   public void changePassword(ResetPasswordChangePasswordInputDTO input){
@@ -101,7 +119,7 @@ public class AuthService {
 
       employeeRepository.save(employee);
     } else throw new UnauthorizedException(
-          messageService.getMessage("exception.validate-key.invalid")
+          "exception.validate-key.invalid"
       );
   }
 

@@ -3,10 +3,8 @@ package com.aether.ms_auth.auth.controllers;
 import com.aether.ms_auth.auth.dto.input.RefreshTokenInputDTO;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
 import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
-import com.aether.ms_auth.auth.dto.request.LoginRequestDTO;
-import com.aether.ms_auth.auth.dto.request.RegisterRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordChangePasswordRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordSendCodeRequestDTO;
+import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
+import com.aether.ms_auth.auth.dto.request.*;
 import com.aether.ms_auth.auth.mappers.AuthMapper;
 import com.aether.ms_auth.auth.services.AuthService;
 import com.aether.ms_auth.shared.docs.AuthControllerDocs;
@@ -71,6 +69,19 @@ public class AuthController implements AuthControllerDocs {
     this.authService.sendCode(AuthMapper.convertSendCodeRequestToInput(input));
 
     return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  @PostMapping("/reset-password/validate-code")
+  public ResponseEntity<ResetPasswordValidateCodeOutputDTO> resetPasswordValidateCode(
+      @RequestBody
+      @Valid
+      ResetPasswordValidateCodeRequestDTO input
+  ){
+    return new ResponseEntity<>(
+        this.authService.validateCode(AuthMapper.convertValidateCodeRequestToInput(input)),
+        HttpStatus.OK
+    );
   }
 
   @PostMapping("/reset-password/change-password")
