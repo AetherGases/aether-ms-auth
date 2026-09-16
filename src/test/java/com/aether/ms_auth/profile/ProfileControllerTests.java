@@ -9,6 +9,7 @@ import com.aether.ms_auth.shared.security.jwt.JwtTokenProvider;
 import com.aether.ms_auth.shared.services.MessageService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
