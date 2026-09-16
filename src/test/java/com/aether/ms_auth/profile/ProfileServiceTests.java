@@ -14,7 +14,6 @@ import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionGroupEn
 import com.aether.ms_auth.shared.persistence.postgres.entities.StorageFileEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.StorageFileRepository;
-import com.aether.ms_auth.shared.services.MessageService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
