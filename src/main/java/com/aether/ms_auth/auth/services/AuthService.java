@@ -89,6 +89,24 @@ public class AuthService {
     }
   }
 
+  @Transactional
+  public void resendCode(ResetPasswordResendCodeInputDTO input){
+    EmployeeEntity employee = employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElse(null);
+    GeneratedCodesDocument codeDocument = generatedCodesRepository.findByEmail(input.email());
+
+    if (employee != null && codeDocument != null) {
+      String code = String.valueOf(100000 + random.nextInt(900000));
+
+      codeDocument.setCode(passwordEncoder.encode(code));
+
+      generatedCodesRepository.save(
+          codeDocument
+      );
+
+      brevoService.send(new SendCodeTemplate(NormalizeOutput.name(employee.getName()), code), employee.getEmail());
+    }
+  }
+
   public ResetPasswordValidateCodeOutputDTO validateCode(ResetPasswordValidateCodeInputDTO input){
     EmployeeEntity employee = employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElse(null);
     GeneratedCodesDocument codeDocument = generatedCodesRepository.findByEmail(input.email());

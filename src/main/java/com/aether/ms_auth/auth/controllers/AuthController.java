@@ -72,6 +72,18 @@ public class AuthController implements AuthControllerDocs {
   }
 
   @Override
+  @PostMapping("/reset-password/resend-code")
+  public ResponseEntity<Void> resetPasswordResendCode(
+      @RequestBody
+      @Valid
+      ResetPasswordResendCodeRequestDTO input
+  ){
+    this.authService.resendCode(AuthMapper.convertResendCodeRequestToInput(input));
+
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
   @PostMapping("/reset-password/validate-code")
   public ResponseEntity<ResetPasswordValidateCodeOutputDTO> resetPasswordValidateCode(
       @RequestBody

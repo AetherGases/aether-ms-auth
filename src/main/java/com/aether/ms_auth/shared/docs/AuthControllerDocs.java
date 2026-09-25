@@ -3,10 +3,7 @@ package com.aether.ms_auth.shared.docs;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
 import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
 import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
-import com.aether.ms_auth.auth.dto.request.LoginRequestDTO;
-import com.aether.ms_auth.auth.dto.request.RegisterRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordSendCodeRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordValidateCodeRequestDTO;
+import com.aether.ms_auth.auth.dto.request.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -87,6 +84,28 @@ public interface AuthControllerDocs {
   ResponseEntity<Void> resetPasswordSendCode(
       @Valid
       ResetPasswordSendCodeRequestDTO input
+  );
+
+  @Operation(
+      summary = "Reenvia um código para o e-mail informado.",
+      description = "Reenvia um código para o e-mail informado se o mesmo estiver ativo.",
+      tags = {"Auth"},
+      responses = {
+          @ApiResponse(description = "No content", responseCode = "204", content =
+          @Content(
+              mediaType = MediaType.APPLICATION_JSON_VALUE,
+              array = @ArraySchema(schema = @Schema(implementation = Void.class))
+          )
+          ),
+          @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+          @ApiResponse(description = "Unhautorized", responseCode = "401", content = @Content),
+          @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content),
+          @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
+      }
+  )
+  ResponseEntity<Void> resetPasswordResendCode(
+      @Valid
+      ResetPasswordResendCodeRequestDTO input
   );
 
   @Operation(

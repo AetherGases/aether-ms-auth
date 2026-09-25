@@ -20,6 +20,12 @@ public class AuthMapper {
     );
   }
 
+  public static ResetPasswordResendCodeInputDTO convertResendCodeRequestToInput(ResetPasswordResendCodeRequestDTO request){
+    return new ResetPasswordResendCodeInputDTO(
+        NormalizeInput.email(request.email())
+    );
+  }
+
   public static ResetPasswordValidateCodeInputDTO convertValidateCodeRequestToInput(ResetPasswordValidateCodeRequestDTO request){
     return new ResetPasswordValidateCodeInputDTO(
         NormalizeInput.email(request.email()),
