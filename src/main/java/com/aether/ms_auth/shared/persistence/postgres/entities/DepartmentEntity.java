@@ -31,4 +31,10 @@ public class DepartmentEntity extends DateBaseEntity{
 
   @OneToMany(mappedBy = "department")
   private List<EmployeeEntity> employee;
+
+  public DepartmentEntity(String name, String description, UnitEntity unit) {
+    this.name = name;
+    this.description = description;
+    this.unit = unit;
+  }
 }

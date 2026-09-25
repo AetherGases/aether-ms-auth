@@ -57,7 +57,7 @@ public class AuthService {
 
     return tokenProvider.createAccessToken(
         input.email(),
-        employee.getPermissionGroups().stream().flatMap(group -> group.getPermissions().stream()).map(permission -> permission.getName()).toList()
+        employee.getPermissionGroup().getPermissions().stream().map(permission -> permission.getName()).toList()
     );
   }
 

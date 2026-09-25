@@ -75,9 +75,7 @@ public class ProfileServiceTests {
       "test@gmail.com",
       "1199999999",
       EmployeeStatusEnum.ACTIVE,
-      List.of(
-          permissionGroup
-      )
+      permissionGroup
     );
 
     GetMyProfileInputDTO input = new GetMyProfileInputDTO(
@@ -107,7 +105,7 @@ public class ProfileServiceTests {
         "test@gmail.com",
         "1199999999",
         EmployeeStatusEnum.ACTIVE,
-        new ArrayList<>()
+        null
     );
 
     GetMyProfileInputDTO input = new GetMyProfileInputDTO(
@@ -125,7 +123,7 @@ public class ProfileServiceTests {
   void updateUserNameAndPhone(){
     EmployeeEntity employee = new EmployeeEntity(
         "12345678901", "nome antigo", "test@gmail.com", "senhaHash", "1199999999",
-        EmployeeStatusEnum.ACTIVE, List.of()
+        EmployeeStatusEnum.ACTIVE, null
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
@@ -147,7 +145,7 @@ public class ProfileServiceTests {
   void updateUserPassword(){
     EmployeeEntity employee = new EmployeeEntity(
         "12345678901", "nome", "test@gmail.com", "senhaAntigaHash", "1199999999",
-        EmployeeStatusEnum.ACTIVE, List.of()
+        EmployeeStatusEnum.ACTIVE, null
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
@@ -170,7 +168,7 @@ public class ProfileServiceTests {
     StorageFileEntity storageFile = new StorageFileEntity();
     EmployeeEntity employee = new EmployeeEntity(
         "12345678901", "nome", "test@gmail.com", "senhaHash", "1199999999",
-        EmployeeStatusEnum.ACTIVE, List.of()
+        EmployeeStatusEnum.ACTIVE, null
     );
     employee.setStorageFile(storageFile);
 
@@ -195,7 +193,7 @@ public class ProfileServiceTests {
   void updateUserNoChanges(){
     EmployeeEntity employee = new EmployeeEntity(
         "12345678901", "nome", "test@gmail.com", "senhaHash", "1199999999",
-        EmployeeStatusEnum.ACTIVE, List.of()
+        EmployeeStatusEnum.ACTIVE, null
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(

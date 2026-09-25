@@ -41,4 +41,13 @@ public class EnterpriseEntity extends DateBaseEntity{
 
   @OneToMany(mappedBy = "enterprise")
   private List<UnitEntity> units;
+
+  @OneToMany(mappedBy = "enterprise")
+  private List<PermissionGroupEntity> permissionsGroups;
+
+  public EnterpriseEntity(String name, String tradeName, String cnpj) {
+    this.name = name;
+    this.tradeName = tradeName;
+    this.cnpj = cnpj;
+  }
 }

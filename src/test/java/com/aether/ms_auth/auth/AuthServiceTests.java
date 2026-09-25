@@ -9,12 +9,13 @@ import com.aether.ms_auth.shared.exceptions.BadRequestException;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
 import com.aether.ms_auth.shared.helpers.interfaces.BrevoTemplate;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
+import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionEntity;
+import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionGroupEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.redis.entities.GeneratedCodesDocument;
 import com.aether.ms_auth.shared.persistence.redis.repositories.GeneratedCodesRepository;
 import com.aether.ms_auth.shared.security.jwt.JwtTokenProvider;
 import com.aether.ms_auth.shared.services.BrevoService;
-import com.aether.ms_auth.shared.services.MessageService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,13 +69,19 @@ public class AuthServiceTests {
         "Senha123"
     );
 
+    PermissionEntity permission = new PermissionEntity();
+    permission.setName("PROFILE_READ");
+
+    PermissionGroupEntity permissionGroup = new PermissionGroupEntity("teste");
+    permissionGroup.setPermissions(List.of(permission));
+
     EmployeeEntity expectedEntity = new EmployeeEntity(
         "12345678910",
         "teste",
         input.email(),
         "1199999999",
         EmployeeStatusEnum.ACTIVE,
-        new ArrayList<>()
+        permissionGroup
     );
 
     Date now = new Date();
@@ -95,7 +102,7 @@ public class AuthServiceTests {
 
     when(tokenProvider.createAccessToken(
         expectedEntity.getEmail(),
-        expectedEntity.getPermissionGroups().stream().flatMap(g -> g.getPermissions().stream()).map(p -> p.getName()).toList())
+        expectedEntity.getPermissionGroup().getPermissions().stream().map(p -> p.getName()).toList())
     )
         .thenReturn(expectedOutput);
 
