@@ -28,11 +28,9 @@ public class UserService implements UserDetailsService {
         () -> new UnauthorizedException(messageService.getMessage("exception.login.invalid"))
     );
 
-    List<SimpleGrantedAuthority> authorities = employee.getPermissionGroups()
+    List<SimpleGrantedAuthority> authorities = employee.getPermissionGroup()
+        .getPermissions()
         .stream()
-        .flatMap(
-            group -> group.getPermissions().stream()
-        ).distinct()
         .map(
             permission -> new SimpleGrantedAuthority(permission.getName())
         ).toList();

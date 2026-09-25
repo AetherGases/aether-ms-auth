@@ -13,10 +13,9 @@ import java.util.List;
 
 public class ProfileMapper {
   public static GetMyProfileOutputDTO convertEntityToGetProfileOutput(EmployeeEntity entity){
-    List<GetMyProfileInfosOutputDTO.Permission> permissions = entity.getPermissionGroups()
+    List<GetMyProfileInfosOutputDTO.Permission> permissions = entity.getPermissionGroup()
+        .getPermissions()
         .stream()
-        .flatMap(pg -> pg.getPermissions().stream())
-        .distinct()
         .map(GetMyProfileInfosOutputDTO.Permission::new)
         .toList();
 

@@ -3,8 +3,8 @@ package com.aether.ms_auth.profile;
 import com.aether.ms_auth.profile.dto.request.UpdateProfileRequestDTO;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.helpers.NormalizeOutput;
-import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
-import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
+import com.aether.ms_auth.shared.persistence.postgres.entities.*;
+import com.aether.ms_auth.shared.persistence.postgres.repositories.*;
 import com.aether.ms_auth.shared.security.jwt.JwtTokenProvider;
 import com.aether.ms_auth.shared.services.MessageService;
 import com.auth0.jwt.JWT;
@@ -46,6 +46,17 @@ class ProfileControllerTests {
   private EmployeeRepository employeeRepository;
 
   @Autowired
+  private DepartmentRepository departmentRepository;
+
+  @Autowired
+  private EnterpriseRepository enterpriseRepository;
+
+  @Autowired
+  private UnitRepository unitRepository;
+  @Autowired
+  private PermissionGroupRepository permissionGroupRepository;
+
+  @Autowired
   private PasswordEncoder passwordEncoder;
 
   @Autowired
@@ -62,17 +73,50 @@ class ProfileControllerTests {
 
   private final List<Integer> ids = new ArrayList<>();
 
+  private PermissionGroupEntity permissionGroup;
+  private EnterpriseEntity enterprise;
+  private UnitEntity unit;
+  private DepartmentEntity department;
   private EmployeeEntity employeeActive;
 
   private EmployeeEntity employeeInactive;
 
+  @BeforeAll
+  void beforeAll() {
+    enterprise = new EnterpriseEntity(
+        "teste",
+        "teste s.a.",
+        "73414740000148"
+    );
 
-  @BeforeEach
-  void setup() {
+    enterpriseRepository.save(enterprise);
 
-    employeeActive = new EmployeeEntity("12345678902", "Teste", "test@test.com", passwordEncoder.encode("senha123"), "11977394517", EmployeeStatusEnum.ACTIVE, List.of());
+    unit = new UnitEntity(
+        "1234567",
+        "89307523000199",
+        enterprise
+    );
 
-    employeeInactive = new EmployeeEntity("12345678903", "Teste Inativo", "test2@test.com", passwordEncoder.encode("senha123"), "11977394518", EmployeeStatusEnum.INACTIVE, List.of());
+    unitRepository.save(unit);
+
+    department = new DepartmentEntity(
+        "test depto",
+        "departamento de teste",
+        unit
+    );
+
+    departmentRepository.save(department);
+
+    permissionGroup = new PermissionGroupEntity(
+        "teste",
+        enterprise
+    );
+
+    permissionGroupRepository.save(permissionGroup);
+
+    employeeActive = new EmployeeEntity("12345678902", "Teste", "test@test.com", passwordEncoder.encode("senha123"), "11977394517", EmployeeStatusEnum.ACTIVE, permissionGroup, department);
+
+    employeeInactive = new EmployeeEntity("12345678903", "Teste Inativo", "test2@test.com", passwordEncoder.encode("senha123"), "11977394518", EmployeeStatusEnum.INACTIVE, permissionGroup, department);
 
     employeeActive = employeeRepository.save(employeeActive);
     employeeInactive = employeeRepository.save(employeeInactive);
@@ -81,10 +125,19 @@ class ProfileControllerTests {
     ids.add(employeeInactive.getId());
   }
 
-
   @AfterEach
-  void cleanup() {
+  void afterEach() {
+    employeeActive.setStatus(EmployeeStatusEnum.ACTIVE);
+    employeeRepository.save(employeeActive);
+  }
+
+  @AfterAll
+  void afterAll() {
     employeeRepository.deleteAllByIdInBatch(ids);
+    permissionGroupRepository.delete(permissionGroup);
+    departmentRepository.delete(department);
+    unitRepository.delete(unit);
+    enterpriseRepository.delete(enterprise);
   }
 
   private String generateJwt(EmployeeEntity employee) {

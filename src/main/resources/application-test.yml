@@ -1,6 +1,6 @@
 spring:
   application:
-    name: core-api-test
+    name: ms-auth-test
 
   config:
     import: optional:file:.env[.properties]
