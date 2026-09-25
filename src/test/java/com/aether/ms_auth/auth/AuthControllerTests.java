@@ -1,13 +1,11 @@
 package com.aether.ms_auth.auth;
 
 import com.aether.ms_auth.auth.controllers.AuthController;
+import com.aether.ms_auth.auth.dto.input.ResetPasswordResendCodeInputDTO;
 import com.aether.ms_auth.auth.dto.input.ResetPasswordSendCodeInputDTO;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
 import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
-import com.aether.ms_auth.auth.dto.request.LoginRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordChangePasswordRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordSendCodeRequestDTO;
-import com.aether.ms_auth.auth.dto.request.ResetPasswordValidateCodeRequestDTO;
+import com.aether.ms_auth.auth.dto.request.*;
 import com.aether.ms_auth.auth.services.AuthService;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
 import com.aether.ms_auth.shared.services.MessageService;
@@ -130,6 +128,21 @@ public class AuthControllerTests {
 
     verify(authService).sendCode(any(ResetPasswordSendCodeInputDTO.class));
   }
+
+  @Test
+  @DisplayName("Should return 204 when resending reset password code")
+  void resendCodeSuccess() throws Exception {
+    ResetPasswordResendCodeRequestDTO request =
+        new ResetPasswordResendCodeRequestDTO("test@gmail.com");
+
+    mockMvc.perform(post("/api/auth/reset-password/resend-code")
+            .contentType("application/json")
+            .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNoContent());
+
+    verify(authService).resendCode(any(ResetPasswordResendCodeInputDTO.class));
+  }
+
 
   @Test
   @DisplayName("Should return 401 when email is not found")

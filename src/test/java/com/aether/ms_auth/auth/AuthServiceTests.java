@@ -267,6 +267,100 @@ public class AuthServiceTests {
   }
 
   @Test
+  @DisplayName("Should resend if the user is founded")
+  void resetPasswordResendCode () {
+    ResetPasswordResendCodeInputDTO input = new ResetPasswordResendCodeInputDTO(
+        "test@gmail.com"
+    );
+
+    int integerCode = 12345;
+    String code = String.valueOf(100000 + integerCode);
+
+    EmployeeEntity employee = new EmployeeEntity();
+    employee.setName("Test");
+    employee.setEmail(input.email());
+    employee.setStatus(EmployeeStatusEnum.ACTIVE);
+
+    when(employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE))
+        .thenReturn(Optional.of(employee));
+
+    GeneratedCodesDocument existingCode = new GeneratedCodesDocument(
+        employee.getId(),
+        employee.getEmail(),
+        code
+    );
+
+    when(generatedCodesRepository.findByEmail(input.email()))
+        .thenReturn(existingCode);
+
+    when(random.nextInt(900000))
+        .thenReturn(integerCode);
+
+    doNothing()
+        .when(brevoService)
+        .send(any(BrevoTemplate.class), eq(employee.getEmail()));
+
+    authService.resendCode(input);
+
+    ArgumentCaptor<BrevoTemplate> captor =
+        ArgumentCaptor.forClass(BrevoTemplate.class);
+
+    verify(brevoService).send(
+        captor.capture(),
+        eq(employee.getEmail())
+    );
+
+    assertEquals(code, captor.getValue().params().get("code"));
+  }
+
+  @Test
+  @DisplayName("Should not send if the user does not exist")
+  void resetPasswordResendCodeWhenEmployeeNotFound() {
+    ResetPasswordResendCodeInputDTO input =
+        new ResetPasswordResendCodeInputDTO("test@gmail.com");
+
+    when(employeeRepository.findByEmailAndStatus(
+        input.email(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.empty());
+
+    authService.resendCode(input);
+
+    verify(brevoService, never()).send(
+        any(BrevoTemplate.class),
+        anyString()
+    );
+  }
+
+  @Test
+  @DisplayName("Should not resend if the user already has not a code")
+  void resetPasswordResendCodeWhenCodeDoesNotExists() {
+    String code = "123456";
+    ResetPasswordResendCodeInputDTO input =
+        new ResetPasswordResendCodeInputDTO("test@gmail.com");
+
+    EmployeeEntity employee = new EmployeeEntity();
+    employee.setName("Test");
+    employee.setEmail(input.email());
+    employee.setStatus(EmployeeStatusEnum.ACTIVE);
+
+    when(employeeRepository.findByEmailAndStatus(
+        input.email(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.of(employee));
+
+    when(generatedCodesRepository.findByEmail(input.email()))
+        .thenReturn(null);
+
+    authService.resendCode(input);
+
+    verify(brevoService, never()).send(
+        any(BrevoTemplate.class),
+        anyString()
+    );
+  }
+
+  @Test
   @DisplayName("Should throw a unauthorized exception when email is incorrect")
   void resetPasswordValidateCodeWhenEmailIsNotFounded() {
     String code = "123456";
