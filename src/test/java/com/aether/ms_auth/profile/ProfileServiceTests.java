@@ -2,16 +2,12 @@ package com.aether.ms_auth.profile;
 
 import com.aether.ms_auth.profile.dto.input.GetMyProfileInputDTO;
 import com.aether.ms_auth.profile.dto.input.UpdateProfileInputDTO;
-import com.aether.ms_auth.profile.dto.output.GetMyProfileInfosOutputDTO;
 import com.aether.ms_auth.profile.dto.output.GetMyProfileOutputDTO;
 import com.aether.ms_auth.profile.dto.output.UpdateProfileOutputDTO;
 import com.aether.ms_auth.profile.services.ProfileService;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.NotFoundException;
-import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
-import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionEntity;
-import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionGroupEntity;
-import com.aether.ms_auth.shared.persistence.postgres.entities.StorageFileEntity;
+import com.aether.ms_auth.shared.persistence.postgres.entities.*;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.StorageFileRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -51,14 +47,17 @@ public class ProfileServiceTests {
 
   @Test
   @DisplayName("Should return an user and its permissions")
-  void getMyProfile(){
+  void getMyProfile() {
+    EnterpriseEntity enterprise = new EnterpriseEntity(
+        "teste",
+        "teste S.A",
+        "1234567890123"
+    );
+
     PermissionEntity permission = new PermissionEntity(
         "Permission Test",
         "A Permission Test"
     );
-
-    GetMyProfileInfosOutputDTO.Permission expectedPermission =
-        new GetMyProfileInfosOutputDTO.Permission(permission);
 
     PermissionGroupEntity permissionGroup = new PermissionGroupEntity(
         "Permission Group Test"
@@ -66,31 +65,92 @@ public class ProfileServiceTests {
 
     permissionGroup.setPermissions(List.of(permission));
 
+    AddressEntity address = new AddressEntity(
+        "89200-000",
+        "SC",
+        "Joinville",
+        "Centro",
+        "Rua Teste",
+        123,
+        "Apto 1"
+    );
+
+    UnitEntity unit = new UnitEntity(
+        "1234567",
+        "12345678000190",
+        enterprise,
+        address
+    );
+
+    DepartmentEntity department = new DepartmentEntity(
+        "1234567890123",
+        "Department Test",
+        unit
+    );
+
+    StorageFileEntity image = new StorageFileEntity(
+        "profile.png",
+        "/images/profile.png"
+    );
+
     String cpf = "123.456.789-01";
     String name = "Test";
 
     EmployeeEntity employee = new EmployeeEntity(
-      cpf.replaceAll("[^\\d]", ""),
-      name.toLowerCase(),
-      "test@gmail.com",
-      "1199999999",
-      EmployeeStatusEnum.ACTIVE,
-      permissionGroup
+        cpf.replaceAll("[^\\d]", ""),
+        name.toLowerCase(),
+        "test@gmail.com",
+        "1199999999",
+        EmployeeStatusEnum.ACTIVE,
+        permissionGroup
     );
+
+    employee.setDepartment(department);
+    employee.setStorageFile(image);
 
     GetMyProfileInputDTO input = new GetMyProfileInputDTO(
         employee.getId()
     );
 
-    when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
-        .thenReturn(Optional.of(employee));
+    when(employeeRepository.findByIdAndStatus(
+        employee.getId(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.of(employee));
 
     GetMyProfileOutputDTO output = profileService.getMyProfile(input);
 
-    assertEquals(output.cpf(), cpf);
-    assertEquals(output.name(), name);
+    assertEquals(employee.getId(), output.id());
+    assertEquals("123.456.789-01", output.cpf());
+    assertEquals("test@gmail.com", output.email());
+    assertEquals("Test", output.name());
+    assertEquals("(11) 9999-9999", output.phone());
 
-    assertEquals(output.permissions(), List.of(expectedPermission));
+    GetMyProfileOutputDTO.Permission expectedPermission =
+        new GetMyProfileOutputDTO.Permission(
+            permission.getId(),
+            permission.getName(),
+            permission.getDescription()
+        );
+
+    assertEquals(List.of(expectedPermission), output.permissions());
+
+    assertEquals(image.getId(), output.image().id());
+    assertEquals(image.getName(), output.image().name());
+    assertEquals(image.getPath(), output.image().path());
+
+    assertEquals(unit.getId(), output.unit().id());
+    assertEquals(unit.getCnae(), output.unit().cnae());
+    assertEquals(unit.getCnpj(), output.unit().cnpj());
+    assertEquals(unit.getIsActive(), output.unit().isActive());
+
+    assertEquals(address.getId(), output.unit().address().id());
+    assertEquals(address.getZipCode(), output.unit().address().zipCode());
+    assertEquals(address.getState(), output.unit().address().state());
+    assertEquals(address.getCity(), output.unit().address().city());
+    assertEquals(address.getNeighborhood(), output.unit().address().neighborhood());
+    assertEquals(address.getStreet(), output.unit().address().street());
+    assertEquals(address.getNumber(), output.unit().address().number());
+    assertEquals(address.getComplement(), output.unit().address().complement());
   }
 
   @Test

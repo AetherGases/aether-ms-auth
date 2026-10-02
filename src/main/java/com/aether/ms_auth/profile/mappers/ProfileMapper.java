@@ -1,23 +1,21 @@
 package com.aether.ms_auth.profile.mappers;
 
 import com.aether.ms_auth.profile.dto.input.UpdateProfileInputDTO;
-import com.aether.ms_auth.profile.dto.output.GetMyProfileInfosOutputDTO;
 import com.aether.ms_auth.profile.dto.output.GetMyProfileOutputDTO;
 import com.aether.ms_auth.profile.dto.output.UpdateProfileOutputDTO;
 import com.aether.ms_auth.profile.dto.request.UpdateProfileRequestDTO;
 import com.aether.ms_auth.shared.helpers.NormalizeInput;
 import com.aether.ms_auth.shared.helpers.NormalizeOutput;
-import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
-
-import java.util.List;
+import com.aether.ms_auth.shared.persistence.postgres.entities.*;
 
 public class ProfileMapper {
-  public static GetMyProfileOutputDTO convertEntityToGetProfileOutput(EmployeeEntity entity){
-    List<GetMyProfileInfosOutputDTO.Permission> permissions = entity.getPermissionGroup()
-        .getPermissions()
-        .stream()
-        .map(GetMyProfileInfosOutputDTO.Permission::new)
-        .toList();
+  public static GetMyProfileOutputDTO convertEntityToGetProfileOutput(
+      EmployeeEntity entity
+  ) {
+    DepartmentEntity department = entity.getDepartment();
+    UnitEntity unit = department.getUnit();
+    AddressEntity unitAddress = unit.getAddress();
+    StorageFileEntity image = entity.getStorageFile();
 
     return new GetMyProfileOutputDTO(
         entity.getId(),
@@ -25,7 +23,40 @@ public class ProfileMapper {
         NormalizeOutput.email(entity.getEmail()),
         NormalizeOutput.name(entity.getName()),
         NormalizeOutput.phone(entity.getPhone()),
-        permissions
+
+        new GetMyProfileOutputDTO.Image(
+            image.getId(),
+            image.getName(),
+            image.getPath()
+        ),
+
+        entity.getPermissionGroup()
+            .getPermissions()
+            .stream()
+            .map(p -> new GetMyProfileOutputDTO.Permission(
+                p.getId(),
+                p.getName(),
+                p.getDescription()
+            ))
+            .toList(),
+
+        new GetMyProfileOutputDTO.Unit(
+            unit.getId(),
+            unit.getCnae(),
+            unit.getCnpj(),
+            unit.getIsActive(),
+
+            new GetMyProfileOutputDTO.Address(
+                unitAddress.getId(),
+                unitAddress.getZipCode(),
+                unitAddress.getState(),
+                unitAddress.getCity(),
+                unitAddress.getNeighborhood(),
+                unitAddress.getStreet(),
+                unitAddress.getNumber(),
+                unitAddress.getComplement()
+            )
+        )
     );
   }
 
