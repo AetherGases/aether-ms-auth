@@ -5,6 +5,7 @@ import com.aether.ms_auth.shared.helpers.CustomUserDetails;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.services.MessageService;
+import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,9 +25,13 @@ public class UserService implements UserDetailsService {
   @Override
   @Transactional
   public UserDetails loadUserByUsername(String email) {
-    EmployeeEntity employee =  employeeRepository.findByEmail(email).orElseThrow(
-        () -> new UnauthorizedException(messageService.getMessage("exception.login.invalid"))
-    );
+    EmployeeEntity employee = employeeRepository
+      .findByEmailAndStatus(email, EmployeeStatusEnum.ACTIVE)
+      .orElseThrow(
+          () -> new UnauthorizedException(
+              messageService.getMessage("exception.login.invalid")
+          )
+      );
 
     List<SimpleGrantedAuthority> authorities = employee.getPermissionGroup()
         .getPermissions()

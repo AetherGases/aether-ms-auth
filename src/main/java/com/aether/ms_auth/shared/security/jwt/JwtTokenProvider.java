@@ -51,6 +51,9 @@ public class JwtTokenProvider {
 
     String accessToken = getAccessToken(email, permissions, now, validity);
     String refreshToken = getRefreshToken(email, permissions, now);
+    String role = permissions.contains("Gerenciar funcionários")
+      ? "administrator"
+      : "analyst";
 
     return new LoginOutputDTO(
         email,
@@ -58,7 +61,8 @@ public class JwtTokenProvider {
         now,
         validity,
         accessToken,
-        refreshToken
+        refreshToken,
+        role
     );
   }
 
@@ -71,7 +75,12 @@ public class JwtTokenProvider {
 
     String email = decodedJWT.getSubject();
 
-    List<String> permissions = decodedJWT.getClaim("roles").asList(String.class);
+    UserDetails userDetails = userService.loadUserByUsername(email);
+
+    List<String> permissions = userDetails.getAuthorities()
+        .stream()
+        .map(authority -> authority.getAuthority())
+        .toList();
 
     return createAccessToken(email, permissions);
   }

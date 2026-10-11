@@ -8,6 +8,7 @@ public record LoginOutputDTO(
     Date created,
     Date expiration,
     String accessToken,
-    String refreshToken
+    String refreshToken,
+    String role
 ) {
 }
