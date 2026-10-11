@@ -60,7 +60,8 @@ public class AuthControllerTests {
         now,
         validity,
         "mocked-access-token",
-        "mocked-refresh-token"
+        "mocked-refresh-token",
+        "analyst"
     );
 
     when(authService.login(any())).thenReturn(output);
@@ -70,7 +71,8 @@ public class AuthControllerTests {
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.accessToken").value("mocked-access-token"))
-        .andExpect(jsonPath("$.refreshToken").value("mocked-refresh-token"));
+        .andExpect(jsonPath("$.refreshToken").value("mocked-refresh-token"))
+        .andExpect(jsonPath("$.role").value("analyst"));
   }
 
   @Test
@@ -96,7 +98,8 @@ public class AuthControllerTests {
         now,
         validity,
         "new-access-token",
-        "new-refresh-token"
+        "new-refresh-token",
+        "analyst"
     );
 
     when(authService.refreshToken(any())).thenReturn(output);
@@ -104,7 +107,8 @@ public class AuthControllerTests {
     mockMvc.perform(put("/api/auth/refresh/{email}", "test@test.com")
             .header("Authorization", "some-refresh-token"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.accessToken").value("new-access-token"));
+        .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+        .andExpect(jsonPath("$.role").value("analyst"));
   }
 
   @Test
