@@ -14,7 +14,9 @@ public class ProfileMapper {
   ) {
     DepartmentEntity department = entity.getDepartment();
     UnitEntity unit = department.getUnit();
+    EnterpriseEntity enterprise = unit.getEnterprise();
     AddressEntity unitAddress = unit.getAddress();
+    AddressEntity enterpriseAddress = enterprise.getAddress();
     StorageFileEntity image = entity.getStorageFile();
 
     return new GetMyProfileOutputDTO(
@@ -39,6 +41,23 @@ public class ProfileMapper {
                 p.getDescription()
             ))
             .toList(),
+
+        new GetMyProfileOutputDTO.Enterprise(
+            enterprise.getId(),
+            enterprise.getName(),
+            enterprise.getTradeName(),
+            enterprise.getCnpj(),
+            new GetMyProfileOutputDTO.Address(
+                enterpriseAddress.getId(),
+                enterpriseAddress.getZipCode(),
+                enterpriseAddress.getState(),
+                enterpriseAddress.getCity(),
+                enterpriseAddress.getNeighborhood(),
+                enterpriseAddress.getStreet(),
+                enterpriseAddress.getNumber(),
+                enterpriseAddress.getComplement()
+            )
+        ),
 
         new GetMyProfileOutputDTO.Unit(
             unit.getId(),

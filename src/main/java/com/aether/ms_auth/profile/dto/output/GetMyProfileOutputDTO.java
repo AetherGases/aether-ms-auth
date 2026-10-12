@@ -10,6 +10,7 @@ public record GetMyProfileOutputDTO(
     String phone,
     Image image,
     List<Permission> permissions,
+    Enterprise enterprise,
     Unit unit
 ) {
   public record Permission(
@@ -30,6 +31,13 @@ public record GetMyProfileOutputDTO(
       String complement
   ){}
 
+  public record Enterprise(
+      Integer id,
+      String name,
+      String tradeName,
+      String cnpj,
+      Address address
+  ){}
   public record Unit(
       Integer id,
       String cnae,

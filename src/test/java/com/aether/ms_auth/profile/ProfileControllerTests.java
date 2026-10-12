@@ -109,7 +109,8 @@ class ProfileControllerTests {
     enterprise = new EnterpriseEntity(
         "teste",
         "teste s.a.",
-        "73414740000148"
+        "73414740000148",
+        address
     );
 
     enterpriseRepository.save(enterprise);
