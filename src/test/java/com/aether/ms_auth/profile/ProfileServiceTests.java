@@ -48,12 +48,6 @@ public class ProfileServiceTests {
   @Test
   @DisplayName("Should return an user and its permissions")
   void getMyProfile() {
-    EnterpriseEntity enterprise = new EnterpriseEntity(
-        "teste",
-        "teste S.A",
-        "1234567890123"
-    );
-
     PermissionEntity permission = new PermissionEntity(
         "Permission Test",
         "A Permission Test"
@@ -73,6 +67,13 @@ public class ProfileServiceTests {
         "Rua Teste",
         123,
         "Apto 1"
+    );
+
+    EnterpriseEntity enterprise = new EnterpriseEntity(
+        "teste",
+        "teste S.A",
+        "1234567890123",
+        address
     );
 
     UnitEntity unit = new UnitEntity(

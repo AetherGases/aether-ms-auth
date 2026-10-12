@@ -47,7 +47,7 @@ public class ProfileMapper {
             enterprise.getName(),
             enterprise.getTradeName(),
             enterprise.getCnpj(),
-            new GetMyProfileOutputDTO.Address(
+            enterpriseAddress != null ? new GetMyProfileOutputDTO.Address(
                 enterpriseAddress.getId(),
                 enterpriseAddress.getZipCode(),
                 enterpriseAddress.getState(),
@@ -56,7 +56,7 @@ public class ProfileMapper {
                 enterpriseAddress.getStreet(),
                 enterpriseAddress.getNumber(),
                 enterpriseAddress.getComplement()
-            )
+            ) : null
         ),
 
         new GetMyProfileOutputDTO.Unit(
@@ -65,7 +65,7 @@ public class ProfileMapper {
             unit.getCnpj(),
             unit.getIsActive(),
 
-            new GetMyProfileOutputDTO.Address(
+            unitAddress != null ? new GetMyProfileOutputDTO.Address(
                 unitAddress.getId(),
                 unitAddress.getZipCode(),
                 unitAddress.getState(),
@@ -74,7 +74,7 @@ public class ProfileMapper {
                 unitAddress.getStreet(),
                 unitAddress.getNumber(),
                 unitAddress.getComplement()
-            )
+            ): null
         )
     );
   }
