@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.redis.core.RedisHash;
 
 @RedisHash("generated_codes")
@@ -16,7 +15,7 @@ import org.springframework.data.redis.core.RedisHash;
 public class GeneratedCodesDocument {
   @Id
   private String email;
-  @Field(name = "user_id")
+
   private Integer userId;
   private String code;
 

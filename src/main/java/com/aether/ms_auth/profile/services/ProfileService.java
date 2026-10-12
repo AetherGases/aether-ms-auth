@@ -11,10 +11,10 @@ import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.StorageFileEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.StorageFileRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class ProfileService {
   private final StorageFileRepository storageFileRepository;
   private final PasswordEncoder passwordEncoder;
 
-  @Transactional
+  @Transactional(readOnly = true)
   public GetMyProfileOutputDTO getMyProfile(GetMyProfileInputDTO input){
     EmployeeEntity employee = employeeRepository.findByIdAndStatus(input.id(), EmployeeStatusEnum.ACTIVE).orElseThrow(
         () -> new NotFoundException("exception.profile.not-found")
