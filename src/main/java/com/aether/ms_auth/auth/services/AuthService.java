@@ -16,7 +16,6 @@ import com.aether.ms_auth.shared.persistence.redis.entities.GeneratedCodesDocume
 import com.aether.ms_auth.shared.persistence.redis.repositories.GeneratedCodesRepository;
 import com.aether.ms_auth.shared.security.jwt.JwtTokenProvider;
 import com.aether.ms_auth.shared.services.BrevoService;
-import com.aether.ms_auth.shared.services.MessageService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

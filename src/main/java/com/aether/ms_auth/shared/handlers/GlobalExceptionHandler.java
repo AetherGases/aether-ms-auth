@@ -1,6 +1,6 @@
 package com.aether.ms_auth.shared.handlers;
 
-import com.aether.ms_auth.shared.exceptions.CoreApiException;
+import com.aether.ms_auth.shared.exceptions.MsAuthException;
 import com.aether.ms_auth.shared.handlers.dto.output.ExceptionOutputDTO;
 import com.aether.ms_auth.shared.services.MessageService;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
   private final MessageService messageService;
-  @ExceptionHandler(CoreApiException.class)
-  public ResponseEntity<ExceptionOutputDTO> handleCoreApiException(CoreApiException ex){
+  @ExceptionHandler(MsAuthException.class)
+  public ResponseEntity<ExceptionOutputDTO> handleCoreApiException(MsAuthException ex){
     return new ResponseEntity<>(
         new ExceptionOutputDTO(
             messageService.getMessage(ex.getMessage()),

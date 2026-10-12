@@ -14,7 +14,8 @@ spring:
     jwt:
       token:
         secret-key: ${JWT_SECRET:secret}
-        expire-length: ${JWT_EXPIRE_LENGTH:3600000}
+        expire-token-length: ${JWT_TOKEN_EXPIRE_LENGTH:3600000}
+        expire-refresh-length: ${JWT_REFRESH_EXPIRE_LENGTH:86400000}
 
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
