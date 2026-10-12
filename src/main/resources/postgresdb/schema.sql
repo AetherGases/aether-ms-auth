@@ -1,3 +1,5 @@
+\connect dbAether2Year
+
 BEGIN;
 
 -- =========================================================
@@ -139,7 +141,7 @@ CREATE TABLE permission_group (
                                   id SERIAL,
                                   description VARCHAR(150) NOT NULL,
                                   created_at TIMESTAMP DEFAULT current_timestamp,
-                                  id_enterprise INTEGER NOT NULL,
+                                  id_enterprise INTEGER,
                                   CONSTRAINT pk_permission_group PRIMARY KEY (id)
 );
 
@@ -147,10 +149,12 @@ CREATE TABLE permission (
                             id SERIAL,
                             name VARCHAR(150) NOT NULL,
                             description VARCHAR(150),
-                            url VARCHAR(50) NOT NULL,
+                            pattern VARCHAR(150) NOT NULL,
                             created_at TIMESTAMP DEFAULT current_timestamp,
                             updated_at TIMESTAMP,
-                            CONSTRAINT pk_permission PRIMARY KEY (id)
+                            CONSTRAINT pk_permission PRIMARY KEY (id),
+                            CONSTRAINT uq_permission_pattern UNIQUE (pattern),
+                            CONSTRAINT ck_permission_pattern_not_empty CHECK (btrim(pattern) <> '')
 );
 
 CREATE TABLE permission_group_permission (
@@ -197,7 +201,7 @@ CREATE TABLE employee (
                           cpf CHAR(11) NOT NULL UNIQUE,
                           name VARCHAR(150) NOT NULL,
                           email VARCHAR(255) NOT NULL UNIQUE,
-                          phone VARCHAR(20) NOT NULL,
+                          phone VARCHAR(20),
                           password_hash VARCHAR(255) NOT NULL,
                           employee_status EMPLOYEE_STATUS NOT NULL,
                           created_at TIMESTAMP DEFAULT current_timestamp,
@@ -476,12 +480,8 @@ INTO v_group_enterprise_id
 FROM permission_group pg
 WHERE pg.id = NEW.id_permission_group;
 
-IF v_group_enterprise_id IS NULL THEN
-        RAISE EXCEPTION 'permission group must belong to an enterprise'
-            USING ERRCODE = '23514';
-END IF;
-
-    IF v_employee_enterprise_id <> v_group_enterprise_id THEN
+IF v_group_enterprise_id IS NOT NULL
+       AND v_employee_enterprise_id <> v_group_enterprise_id THEN
         RAISE EXCEPTION 'permission group must belong to the same enterprise as the employee department'
             USING ERRCODE = '23514';
 END IF;
@@ -497,6 +497,7 @@ SET search_path = public, pg_temp
 AS $$
 BEGIN
     IF NEW.id_enterprise IS DISTINCT FROM OLD.id_enterprise
+       AND NEW.id_enterprise IS NOT NULL
        AND EXISTS (
            SELECT 1
            FROM employee e
@@ -524,7 +525,7 @@ CREATE TRIGGER trg_validate_permission_group_enterprise_change
     EXECUTE FUNCTION fn_validate_permission_group_enterprise_change();
 
 COMMENT ON FUNCTION fn_validate_employee_permission_group_enterprise() IS
-    'Ensures the employee permission group belongs to the same enterprise as the employee department. AUTH-FR-006, AUTH-FR-007.';
+    'Ensures scoped permission groups belong to the same enterprise as the employee department. Global groups (null id_enterprise) are allowed for any employee. AUTH-FR-006, AUTH-FR-007.';
 
 COMMENT ON FUNCTION fn_validate_permission_group_enterprise_change() IS
     'Prevents changing a permission group enterprise when employees from another enterprise still reference it. AUTH-FR-007.';
