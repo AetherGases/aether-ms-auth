@@ -26,4 +26,9 @@ public class StorageFileEntity extends DateBaseEntity{
 
   @OneToOne(mappedBy = "storageFile")
   private EmployeeEntity employee;
+
+  public StorageFileEntity(String name, String path) {
+    this.name = name;
+    this.path = path;
+  }
 }

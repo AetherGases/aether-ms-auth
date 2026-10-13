@@ -86,4 +86,16 @@ public class EmployeeEntity extends UserBaseEntity{
     this.permissionGroup = permissionGroup;
     this.department = department;
   }
+
+  public EmployeeEntity(String cpf, String name, String email, String passwordHash, String phone, EmployeeStatusEnum status, PermissionGroupEntity permissionGroup, DepartmentEntity department, StorageFileEntity image) {
+    this.cpf = cpf;
+    this.name = name;
+    this.setEmail(email);
+    this.setPasswordHash(passwordHash);
+    this.phone = phone;
+    this.status = status;
+    this.permissionGroup = permissionGroup;
+    this.department = department;
+    this.storageFile = image;
+  }
 }

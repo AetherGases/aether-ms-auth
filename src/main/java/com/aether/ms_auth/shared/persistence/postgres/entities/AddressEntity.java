@@ -52,4 +52,14 @@ public class AddressEntity extends DateBaseEntity{
 
   @OneToMany(mappedBy = "address")
   private List<UnitEntity> units;
+
+  public AddressEntity(String zipCode, String state, String city, String neighborhood, String street, Integer number, String complement) {
+    this.zipCode = zipCode;
+    this.state = state;
+    this.city = city;
+    this.neighborhood = neighborhood;
+    this.street = street;
+    this.number = number;
+    this.complement = complement;
+  }
 }

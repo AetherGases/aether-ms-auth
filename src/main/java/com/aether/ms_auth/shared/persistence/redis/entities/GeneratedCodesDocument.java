@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.RedisHash;
 public class GeneratedCodesDocument {
   @Id
   private String email;
+
   private Integer userId;
   private String code;
 

@@ -52,4 +52,12 @@ public class UnitEntity extends DateBaseEntity{
     this.isActive = true;
     this.enterprise = enterprise;
   }
+
+  public UnitEntity(String cnae, String cnpj, EnterpriseEntity enterprise, AddressEntity address) {
+    this.cnae = cnae;
+    this.cnpj = cnpj;
+    this.isActive = true;
+    this.enterprise = enterprise;
+    this.address = address;
+  }
 }
