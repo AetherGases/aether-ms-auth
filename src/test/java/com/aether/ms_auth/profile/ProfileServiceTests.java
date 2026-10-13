@@ -19,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,7 +49,8 @@ public class ProfileServiceTests {
   void getMyProfile() {
     PermissionEntity permission = new PermissionEntity(
         "Permission Test",
-        "A Permission Test"
+        "A Permission Test",
+        ".*"
     );
 
     PermissionGroupEntity permissionGroup = new PermissionGroupEntity(

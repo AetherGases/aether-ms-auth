@@ -26,11 +26,11 @@ public class ProfileMapper {
         NormalizeOutput.name(entity.getName()),
         NormalizeOutput.phone(entity.getPhone()),
 
-        new GetMyProfileOutputDTO.Image(
+        image != null ? new GetMyProfileOutputDTO.Image(
             image.getId(),
             image.getName(),
             image.getPath()
-        ),
+        ) : null,
 
         entity.getPermissionGroup()
             .getPermissions()

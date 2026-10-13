@@ -17,9 +17,9 @@ public class OpenAPIConfig {
     return new OpenAPI()
         .info(
             new Info()
-                .title("Aether Core API")
+                .title("MS Auth")
                 .version("v1")
-                .description("Aqui você encontra todas as rotas da API e o que é necessário enviar de parâmetros para elas funcionarem.")
+                .description("Documentação de todas as rotas relacionadas a autenticação e operações de CRUD relacionadas ao meu perfil.")
                 .termsOfService("")
                 .license(
                     new License()

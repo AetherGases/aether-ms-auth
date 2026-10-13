@@ -2,12 +2,12 @@ package com.aether.ms_auth.shared.exceptions;
 
 import org.springframework.http.HttpStatus;
 
-public abstract class CoreApiException extends RuntimeException{
-  public CoreApiException(String message) {
+public abstract class MsAuthException extends RuntimeException{
+  public MsAuthException(String message) {
     super(message);
   }
 
-  public CoreApiException(String message, Throwable cause) {
+  public MsAuthException(String message, Throwable cause) {
     super(message, cause);
   }
 
