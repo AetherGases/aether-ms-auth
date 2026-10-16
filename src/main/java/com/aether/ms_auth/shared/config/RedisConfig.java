@@ -18,6 +18,10 @@ public class RedisConfig {
   @Value("${spring.data.redis.port}")
   private int port;
 
+  @Value("${spring.data.redis.user}")
+  private String user;
+
+
   @Value("${spring.data.redis.password}")
   private String password;
 
@@ -28,6 +32,7 @@ public class RedisConfig {
 
     configuration.setHostName(host);
     configuration.setPort(port);
+    if (user != null && !user.isBlank()) configuration.setUsername(user);
     configuration.setPassword(password);
 
     return new JedisConnectionFactory(configuration);
