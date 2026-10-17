@@ -1,7 +1,6 @@
 package com.aether.ms_auth.shared.docs;
 
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
-import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
 import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
 import com.aether.ms_auth.auth.dto.request.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -128,28 +127,5 @@ public interface AuthControllerDocs {
   ResponseEntity<ResetPasswordValidateCodeOutputDTO> resetPasswordValidateCode(
       @Valid
       ResetPasswordValidateCodeRequestDTO input
-  );
-
-  // TO DO: remove this route after SQL's dataload is ready to execute, registering users is a first year responsability
-  @Operation(
-      summary = "Cadastra um funcionário no sistema, rota que deve ser removida após o dataload ficar pronto.",
-      description = "Cadastra um usuário no sistema.",
-      tags = {"Auth"},
-      responses = {
-          @ApiResponse(description = "Success", responseCode = "200", content =
-          @Content(
-              mediaType = MediaType.APPLICATION_JSON_VALUE,
-              array = @ArraySchema(schema = @Schema(implementation = RegisterOutputDTO.class))
-          )
-          ),
-          @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
-          @ApiResponse(description = "Unhautorized", responseCode = "401", content = @Content),
-          @ApiResponse(description = "Forbidden", responseCode = "403", content = @Content),
-          @ApiResponse(description = "Internal Server Error", responseCode = "500", content = @Content)
-      }
-  )
-  ResponseEntity<RegisterOutputDTO> register(
-      @Valid
-      RegisterRequestDTO input
   );
 }

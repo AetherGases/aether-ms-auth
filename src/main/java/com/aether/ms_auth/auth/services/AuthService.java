@@ -2,9 +2,7 @@ package com.aether.ms_auth.auth.services;
 
 import com.aether.ms_auth.auth.dto.input.*;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
-import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
 import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
-import com.aether.ms_auth.auth.mappers.AuthMapper;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.BadRequestException;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
@@ -138,19 +136,5 @@ public class AuthService {
     } else throw new UnauthorizedException(
           "exception.validate-key.invalid"
       );
-  }
-
-  public RegisterOutputDTO register(RegisterInputDTO input){
-    EmployeeEntity employee = new EmployeeEntity(
-        input.cpf(),
-        input.name(),
-        input.email(),
-        passwordEncoder.encode(input.password()),
-        input.phone()
-    );
-
-    employeeRepository.save(employee);
-
-    return AuthMapper.convertEntityToOutput(employee);
   }
 }

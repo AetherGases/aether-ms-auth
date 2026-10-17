@@ -43,9 +43,16 @@ public class ProfileService {
     if (input.newPassword() != null) employee.setPasswordHash(passwordEncoder.encode(input.newPassword()));
     if (input.image() != null){
       StorageFileEntity storageFile = employee.getStorageFile();
+
+      if (storageFile == null) {
+        storageFile = new StorageFileEntity();
+      }
+
       storageFile.setName(input.image().imageName());
       storageFile.setPath(input.image().imageUrl());
+
       storageFileRepository.save(storageFile);
+      employee.setStorageFile(storageFile);
     }
 
     employeeRepository.save(employee);
