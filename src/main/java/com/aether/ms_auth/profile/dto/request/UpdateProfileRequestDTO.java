@@ -49,6 +49,17 @@ public record UpdateProfileRequestDTO(
     )
     String newPassword,
 
+    @Size(
+        min = AetherConstants.MIN_DEVICE_TOKEN_LENGTH,
+        max = AetherConstants.MAX_DEVICE_TOKEN_LENGTH,
+        message = "{validation.device-token.size}"
+    )
+    @Schema(
+        description = "Token de notificação do dispositivo do usuário logado",
+        example = "fcm-device-token"
+    )
+    String deviceToken,
+
     ImageRequest image
 ) {
   public record ImageRequest(

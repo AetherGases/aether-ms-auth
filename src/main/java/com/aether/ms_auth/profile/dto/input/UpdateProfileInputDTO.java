@@ -5,6 +5,7 @@ public record UpdateProfileInputDTO(
     String name,
     String phone,
     String newPassword,
+    String deviceToken,
     Image image
 ) {
 

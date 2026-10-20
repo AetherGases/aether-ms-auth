@@ -7,12 +7,15 @@ import com.aether.ms_auth.profile.dto.output.UpdateProfileOutputDTO;
 import com.aether.ms_auth.profile.services.ProfileService;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.NotFoundException;
+import com.aether.ms_auth.shared.persistence.mongo.documents.DeviceTokenDocument;
+import com.aether.ms_auth.shared.persistence.mongo.repository.DeviceTokenRepository;
 import com.aether.ms_auth.shared.persistence.postgres.entities.*;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.StorageFileRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -37,6 +41,9 @@ public class ProfileServiceTests {
 
   @Mock
   private StorageFileRepository storageFileRepository;
+
+  @Mock
+  private DeviceTokenRepository deviceTokenRepository;
 
   @Mock
   private PasswordEncoder passwordEncoder;
@@ -188,7 +195,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), "Nome Novo", "1188888888", null, null
+        employee.getId(), "Nome Novo", "1188888888", null, null, null
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -210,7 +217,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, "novaSenha", null
+        employee.getId(), null, null, "novaSenha", null, null
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -235,7 +242,7 @@ public class ProfileServiceTests {
 
     UpdateProfileInputDTO.Image image = new UpdateProfileInputDTO.Image("foto.png", "http://cdn/foto.png");
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, null, image
+        employee.getId(), null, null, null, null, image
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -258,7 +265,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, null, null
+        employee.getId(), null, null, null, null, null
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -270,12 +277,41 @@ public class ProfileServiceTests {
     assertEquals("nome", employee.getName());
     assertEquals("1199999999", employee.getPhone());
     verify(storageFileRepository, org.mockito.Mockito.never()).save(any());
+    verify(deviceTokenRepository, org.mockito.Mockito.never()).save(any());
+  }
+
+  @Test
+  @DisplayName("Should create a new device token document")
+  void updateUserDeviceToken(){
+    EmployeeEntity employee = new EmployeeEntity(
+        "12345678901", "nome", "test@gmail.com", "senhaHash", "1199999999",
+        EmployeeStatusEnum.ACTIVE, null
+    );
+
+    UpdateProfileInputDTO input = new UpdateProfileInputDTO(
+        employee.getId(), null, null, null, "device-token", null
+    );
+
+    when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
+        .thenReturn(Optional.of(employee));
+    when(employeeRepository.save(employee)).thenReturn(employee);
+
+    profileService.updateUser(input);
+
+    ArgumentCaptor<DeviceTokenDocument> captor = ArgumentCaptor.forClass(DeviceTokenDocument.class);
+    verify(deviceTokenRepository).save(captor.capture());
+
+    DeviceTokenDocument document = captor.getValue();
+    assertEquals(employee.getId(), document.getUserId());
+    assertEquals("device-token", document.getToken());
+    assertNotNull(document.getCreatedAt());
+    assertEquals(document.getCreatedAt(), document.getLastUsedAt());
   }
 
   @Test
   @DisplayName("Should throw an exception if does not find the user")
   void updateUserNotFound(){
-    UpdateProfileInputDTO input = new UpdateProfileInputDTO(999, "Nome", null, null, null);
+    UpdateProfileInputDTO input = new UpdateProfileInputDTO(999, "Nome", null, null, null, null);
 
     when(employeeRepository.findByIdAndStatus(999, EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.empty());

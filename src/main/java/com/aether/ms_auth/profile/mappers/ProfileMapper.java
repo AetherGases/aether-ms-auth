@@ -32,6 +32,9 @@ public class ProfileMapper {
             image.getPath()
         ) : null,
 
+        entity.getCreatedAt().toLocalDate(),
+        entity.getUpdatedAt().toLocalDate(),
+
         entity.getPermissionGroup()
             .getPermissions()
             .stream()
@@ -85,6 +88,7 @@ public class ProfileMapper {
         NormalizeInput.name(request.name()),
         NormalizeInput.phone(request.phone()),
         NormalizeInput.password(request.newPassword()),
+        request.deviceToken() != null ? request.deviceToken().trim() : null,
         request.image() != null
             ? new UpdateProfileInputDTO.Image(
             request.image().imageName(),
