@@ -33,6 +33,7 @@ jobs:
         env:
           MONGO_INITDB_ROOT_USERNAME: ${{ secrets.CI_MONGO_USER }}
           MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.CI_MONGO_PASSWORD }}
+          MONGO_INITDB_DATABASE: ci_db
         ports:
           - 27017:27017
         options: >-

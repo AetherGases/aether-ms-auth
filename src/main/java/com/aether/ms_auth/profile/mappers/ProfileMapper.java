@@ -32,8 +32,8 @@ public class ProfileMapper {
             image.getPath()
         ) : null,
 
-        entity.getCreatedAt().toLocalDate(),
-        entity.getUpdatedAt().toLocalDate(),
+        entity.getCreatedAt() != null ? entity.getCreatedAt().toLocalDate(): null,
+        entity.getUpdatedAt() != null ? entity.getUpdatedAt().toLocalDate() : null,
 
         entity.getPermissionGroup()
             .getPermissions()
