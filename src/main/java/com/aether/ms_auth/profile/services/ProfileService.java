@@ -7,6 +7,8 @@ import com.aether.ms_auth.profile.dto.output.UpdateProfileOutputDTO;
 import com.aether.ms_auth.profile.mappers.ProfileMapper;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.NotFoundException;
+import com.aether.ms_auth.shared.persistence.mongo.documents.DeviceTokenDocument;
+import com.aether.ms_auth.shared.persistence.mongo.repository.DeviceTokenRepository;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.StorageFileEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileService {
   private final EmployeeRepository employeeRepository;
   private final StorageFileRepository storageFileRepository;
+  private final DeviceTokenRepository deviceTokenRepository;
   private final PasswordEncoder passwordEncoder;
 
   @Transactional(readOnly = true)
@@ -56,6 +59,10 @@ public class ProfileService {
     }
 
     employeeRepository.save(employee);
+
+    if (input.deviceToken() != null && !input.deviceToken().isBlank()) {
+      deviceTokenRepository.save(new DeviceTokenDocument(employee.getId(), input.deviceToken()));
+    }
 
     return ProfileMapper.convertEntityToUpdateProfileOutput(employee);
   }

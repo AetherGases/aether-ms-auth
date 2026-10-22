@@ -28,6 +28,20 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      mongo:
+        image: mongo:8.0.13
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ secrets.CI_MONGO_USER }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.CI_MONGO_PASSWORD }}
+          MONGO_INITDB_DATABASE: ci_db
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
       redis:
         image: redis:8.2
         ports:
@@ -70,6 +84,8 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           REDIS_PASSWORD: ci_redis_password
+          MONGO_URL: mongodb://${{ secrets.CI_MONGO_USER }}:${{ secrets.CI_MONGO_PASSWORD }}@localhost:27017/ci_db?authSource=admin
+          MONGO_DB: ci_db
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CI_CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CI_CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CI_CLOUDINARY_API_SECRET }}

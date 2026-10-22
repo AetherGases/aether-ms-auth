@@ -1,5 +1,6 @@
 package com.aether.ms_auth.profile.dto.output;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public record GetMyProfileOutputDTO(
@@ -9,6 +10,8 @@ public record GetMyProfileOutputDTO(
     String name,
     String phone,
     Image image,
+    LocalDate createdAt,
+    LocalDate updatedAt,
     List<Permission> permissions,
     Enterprise enterprise,
     Unit unit

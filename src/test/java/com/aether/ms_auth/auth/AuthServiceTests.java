@@ -8,6 +8,7 @@ import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.BadRequestException;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
 import com.aether.ms_auth.shared.helpers.interfaces.BrevoTemplate;
+import com.aether.ms_auth.shared.persistence.mongo.repository.DeviceTokenRepository;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionGroupEntity;
@@ -27,10 +28,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
@@ -43,6 +46,9 @@ public class AuthServiceTests {
 
   @Mock
   private GeneratedCodesRepository generatedCodesRepository;
+
+  @Mock
+  private DeviceTokenRepository deviceTokenRepository;
 
   @Mock
   private AuthenticationManager authenticationManager;
@@ -110,6 +116,7 @@ public class AuthServiceTests {
 
     assertEquals(output.email(), input.email());
     assertEquals(output.authenticated(), true);
+    verify(deviceTokenRepository).updateLastUsedAtByUserId(eq(expectedEntity.getId()), any(Instant.class));
   }
 
   @Test
@@ -131,9 +138,16 @@ public class AuthServiceTests {
         "some-refresh-token"
     );
 
+    PermissionEntity permission = new PermissionEntity();
+    permission.setName("PROFILE_READ");
+
+    PermissionGroupEntity permissionGroup = new PermissionGroupEntity("teste");
+    permissionGroup.setPermissions(List.of(permission));
+
     EmployeeEntity employee = new EmployeeEntity();
     employee.setEmail(input.email());
     employee.setStatus(EmployeeStatusEnum.ACTIVE);
+    employee.setPermissionGroup(permissionGroup);
 
     Date now = new Date();
     Date validity = new Date(now.getTime() + 3600000);
@@ -150,7 +164,7 @@ public class AuthServiceTests {
     when(employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.of(employee));
 
-    when(tokenProvider.refreshToken(input.refreshToken()))
+    when(tokenProvider.refreshToken(input.refreshToken(), input.email(), List.of("PROFILE_READ")))
         .thenReturn(expectedOutput);
 
     LoginOutputDTO result = authService.refreshToken(input);

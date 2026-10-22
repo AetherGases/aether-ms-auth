@@ -86,6 +86,11 @@ public final class AetherConstants {
   public static final int MAX_EMPLOYEE_PHONE_LENGTH = 20;
   public static final int MIN_EMPLOYEE_PHONE_LENGTH = 10;
 
+  // Device Token
+
+  public static final int MAX_DEVICE_TOKEN_LENGTH = 4096;
+  public static final int MIN_DEVICE_TOKEN_LENGTH = 1;
+
   // Scope
 
   public static final int MAX_SCOPE_NAME_LENGTH = 100;
