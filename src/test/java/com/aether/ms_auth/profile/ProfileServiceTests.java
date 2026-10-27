@@ -159,6 +159,10 @@ public class ProfileServiceTests {
     assertEquals(address.getStreet(), output.unit().address().street());
     assertEquals(address.getNumber(), output.unit().address().number());
     assertEquals(address.getComplement(), output.unit().address().complement());
+
+    assertEquals(department.getId(), output.department().id());
+    assertEquals(department.getName(), output.department().name());
+    assertEquals(department.getDescription(), output.department().description());
   }
 
   @Test
@@ -205,6 +209,27 @@ public class ProfileServiceTests {
     UpdateProfileOutputDTO output = profileService.updateUser(input);
 
     assertEquals("Nome Novo", employee.getName());
+    assertEquals("1188888888", employee.getPhone());
+  }
+
+  @Test
+  @DisplayName("Should update phone when current phone is null")
+  void updateUserPhoneWhenCurrentPhoneIsNull(){
+    EmployeeEntity employee = new EmployeeEntity(
+        "12345678901", "nome", "test@gmail.com", "senhaHash", null,
+        EmployeeStatusEnum.ACTIVE, null
+    );
+
+    UpdateProfileInputDTO input = new UpdateProfileInputDTO(
+        employee.getId(), null, "1188888888", null, null, null
+    );
+
+    when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
+        .thenReturn(Optional.of(employee));
+    when(employeeRepository.save(employee)).thenReturn(employee);
+
+    profileService.updateUser(input);
+
     assertEquals("1188888888", employee.getPhone());
   }
 

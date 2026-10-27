@@ -78,6 +78,12 @@ public class ProfileMapper {
                 unitAddress.getNumber(),
                 unitAddress.getComplement()
             ): null
+        ),
+
+        new GetMyProfileOutputDTO.Department(
+            department.getId(),
+            department.getName(),
+            department.getDescription()
         )
     );
   }
