@@ -99,7 +99,8 @@ public class AuthServiceTests {
         now,
         validity,
         "mocked-access-token",
-        "mocked-refresh-token"
+        "mocked-refresh-token",
+        "analyst"
     );
 
     when(employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE)).thenReturn(
@@ -116,6 +117,7 @@ public class AuthServiceTests {
 
     assertEquals(output.email(), input.email());
     assertEquals(output.authenticated(), true);
+    assertEquals("analyst", output.role());
     verify(deviceTokenRepository).updateLastUsedAtByUserId(eq(expectedEntity.getId()), any(Instant.class));
   }
 
@@ -158,7 +160,8 @@ public class AuthServiceTests {
         now,
         validity,
         "mocked-access-token",
-        "mocked-refresh-token"
+        "mocked-refresh-token",
+        "analyst"
     );
 
     when(employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE))

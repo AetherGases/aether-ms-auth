@@ -57,6 +57,9 @@ public class JwtTokenProvider {
 
     String accessToken = getAccessToken(email, permissions, now, validity);
     String refreshToken = getRefreshToken(email, permissions, now);
+    String role = permissions.contains("Gerenciar funcionários")
+      ? "administrator"
+      : "analyst";
 
     return new LoginOutputDTO(
         email,
@@ -64,7 +67,8 @@ public class JwtTokenProvider {
         now,
         validity,
         accessToken,
-        refreshToken
+        refreshToken,
+        role
     );
   }
 

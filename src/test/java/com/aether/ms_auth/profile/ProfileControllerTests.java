@@ -202,14 +202,14 @@ class ProfileControllerTests {
   }
 
   @Test
-  @DisplayName("Should return 404 when employee is inactive")
+  @DisplayName("Should return 401 when employee is inactive")
   void getMyProfileInactiveEmployee() throws Exception {
     String token = generateJwt(employeeActive);
 
     employeeActive.setStatus(EmployeeStatusEnum.INACTIVE);
     employeeRepository.save(employeeActive);
 
-    mockMvc.perform(get("/api/profile").header("Authorization", "Bearer " + token)).andExpect(status().isNotFound());
+    mockMvc.perform(get("/api/profile").header("Authorization", "Bearer " + token)).andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -275,7 +275,7 @@ class ProfileControllerTests {
   }
 
   @Test
-  @DisplayName("Should return 404 when employee is inactive")
+  @DisplayName("Should return 401 when employee is inactive")
   void updateProfileInactiveEmployee() throws Exception {
     String token = generateJwt(employeeActive);
 
@@ -291,7 +291,7 @@ class ProfileControllerTests {
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
-        .andExpect(status().isNotFound());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
