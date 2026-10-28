@@ -42,7 +42,7 @@ public class ProfileService {
     );
 
     if (input.name() != null && !employee.getName().equals(input.name())) employee.setName(input.name());
-    if (input.phone() != null && !employee.getPhone().equals(input.phone())) employee.setPhone(input.phone());
+    if (input.phone() != null && !input.phone().equals(employee.getPhone())) employee.setPhone(input.phone());
     if (input.newPassword() != null) employee.setPasswordHash(passwordEncoder.encode(input.newPassword()));
     if (input.image() != null){
       StorageFileEntity storageFile = employee.getStorageFile();

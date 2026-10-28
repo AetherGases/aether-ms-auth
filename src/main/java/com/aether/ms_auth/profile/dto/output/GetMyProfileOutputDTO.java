@@ -14,7 +14,8 @@ public record GetMyProfileOutputDTO(
     LocalDate updatedAt,
     List<Permission> permissions,
     Enterprise enterprise,
-    Unit unit
+    Unit unit,
+    Department department
 ) {
   public record Permission(
       Integer id,
@@ -47,6 +48,12 @@ public record GetMyProfileOutputDTO(
       String cnpj,
       Boolean isActive,
       Address address
+  ){}
+
+  public record Department(
+      Integer id,
+      String name,
+      String description
   ){}
 
   public record Image(
