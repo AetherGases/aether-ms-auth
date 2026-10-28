@@ -84,7 +84,7 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           REDIS_PASSWORD: ci_redis_password
-          MONGO_URL: mongodb://${{ secrets.CI_MONGO_USER }}:${{ secrets.CI_MONGO_PASSWORD }}@localhost:27017/ci_db?authSource=admin
+          MONGO_URI: mongodb://${{ secrets.CI_MONGO_USER }}:${{ secrets.CI_MONGO_PASSWORD }}@localhost:27017/ci_db?authSource=admin
           MONGO_DB: ci_db
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CI_CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CI_CLOUDINARY_API_KEY }}

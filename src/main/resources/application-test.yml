@@ -36,7 +36,7 @@ spring:
 
   mongodb:
     authentication-database: admin
-    uri: ${MONGO_URL}
+    uri: ${MONGO_URI}
     database: ${MONGO_DB:ci_db}
     auto-index-creation: true
 
