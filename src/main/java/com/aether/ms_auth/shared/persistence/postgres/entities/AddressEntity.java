@@ -29,7 +29,7 @@ public class AddressEntity extends DateBaseEntity{
   @JdbcTypeCode(SqlTypes.CHAR)
   private String zipCode;
 
-  @Column(length = AetherConstants.MAX_STATE_LENGTH)
+  @Column(length = AetherConstants.MAX_STATE_LENGTH, nullable = false)
   private String state;
 
   @Column(length = AetherConstants.MAX_CITY_LENGTH, nullable = false)
@@ -52,4 +52,14 @@ public class AddressEntity extends DateBaseEntity{
 
   @OneToMany(mappedBy = "address")
   private List<UnitEntity> units;
+
+  public AddressEntity(String zipCode, String state, String city, String neighborhood, String street, Integer number, String complement) {
+    this.zipCode = zipCode;
+    this.state = state;
+    this.city = city;
+    this.neighborhood = neighborhood;
+    this.street = street;
+    this.number = number;
+    this.complement = complement;
+  }
 }

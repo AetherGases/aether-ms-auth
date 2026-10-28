@@ -2,12 +2,13 @@ package com.aether.ms_auth.shared.security.jwt;
 
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
+import com.aether.ms_auth.shared.persistence.redis.repositories.RevokedRefreshTokensRepository;
 import com.aether.ms_auth.shared.security.UserService;
-import com.aether.ms_auth.shared.services.MessageService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.annotation.PostConstruct;
@@ -21,9 +22,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,11 +35,13 @@ public class JwtTokenProvider {
   @Value("${spring.security.jwt.token.secret-key}")
   private String secretKey;
 
-  @Value("${spring.security.jwt.token.expire-length}")
-  private Integer validityInMilliseconds;
+  @Value("${spring.security.jwt.token.expire-token-length}")
+  private Integer tokenValidityInMilliseconds;
+  @Value("${spring.security.jwt.token.expire-refresh-length}")
+  private Integer refreshValidityInMilliseconds;
 
   private final UserService userService;
-  private final MessageService messageService;
+  private final RevokedRefreshTokensRepository revokedRefreshTokensRepository;
 
   Algorithm algorithm = null;
 
@@ -47,7 +53,7 @@ public class JwtTokenProvider {
 
   public LoginOutputDTO createAccessToken(String email, List<String> permissions){
     Date now = new Date();
-    Date validity = new Date(now.getTime() + validityInMilliseconds);
+    Date validity = new Date(now.getTime() + tokenValidityInMilliseconds);
 
     String accessToken = getAccessToken(email, permissions, now, validity);
     String refreshToken = getRefreshToken(email, permissions, now);
@@ -66,29 +72,38 @@ public class JwtTokenProvider {
     );
   }
 
-  public LoginOutputDTO refreshToken(String refreshToken){
+  public LoginOutputDTO refreshToken(String refreshToken, String email, List<String> permissions){
     if (!StringUtils.isEmpty(refreshToken) && refreshToken.startsWith("Bearer ")) refreshToken = refreshToken.substring("Bearer ".length());
 
     JWTVerifier verifier = JWT.require(algorithm).build();
 
-    DecodedJWT decodedJWT = verifier.verify(refreshToken);
+    DecodedJWT decodedJWT;
 
-    String email = decodedJWT.getSubject();
+    try {
+      decodedJWT = verifier.verify(refreshToken);
+    } catch (JWTVerificationException e) {
+      throw new UnauthorizedException("exception.jwt.invalid-or-expired");
+    }
 
-    UserDetails userDetails = userService.loadUserByUsername(email);
+    String tokenId = decodedJWT.getId();
 
-    List<String> permissions = userDetails.getAuthorities()
-        .stream()
-        .map(authority -> authority.getAuthority())
-        .toList();
+    if (tokenId == null || !email.equals(decodedJWT.getSubject())) throw new UnauthorizedException("exception.jwt.invalid");
+
+    Duration remainingValidity = Duration.between(Instant.now(), decodedJWT.getExpiresAtAsInstant());
+
+    if (remainingValidity.isNegative() || remainingValidity.isZero()
+        || !revokedRefreshTokensRepository.revoke(tokenId, remainingValidity)) {
+      throw new UnauthorizedException("exception.jwt.invalid-or-expired");
+    }
 
     return createAccessToken(email, permissions);
   }
 
   private String getRefreshToken(String email, List<String> permissions, Date now) {
-    Date refreshTokenValidity = new Date(now.getTime() + validityInMilliseconds * 3);
+    Date refreshTokenValidity = new Date(now.getTime() + refreshValidityInMilliseconds);
 
     return JWT.create()
+        .withJWTId(UUID.randomUUID().toString())
         .withClaim("roles", permissions)
         .withIssuedAt(now)
         .withExpiresAt(refreshTokenValidity)
@@ -118,14 +133,12 @@ public class JwtTokenProvider {
   }
 
   private DecodedJWT decodedToken(String token) {
-    Algorithm alg = Algorithm.HMAC256(secretKey.getBytes());
-
-    JWTVerifier verifier = JWT.require(alg).build();
+    JWTVerifier verifier = JWT.require(algorithm).build();
 
     try {
       return verifier.verify(token);
     } catch (JWTDecodeException | TokenExpiredException e) {
-      throw new UnauthorizedException(messageService.getMessage("exception.jwt.invalid-or-expired"));
+      throw new UnauthorizedException("exception.jwt.invalid-or-expired");
     }
   }
 
@@ -143,7 +156,7 @@ public class JwtTokenProvider {
     try {
       return decodedJWT.getExpiresAt().after(new Date());
     } catch (Exception e){
-      throw new UnauthorizedException(messageService.getMessage("exception.jwt.invalid-or-expired"));
+      throw new UnauthorizedException("exception.jwt.invalid-or-expired");
     }
   }
 }

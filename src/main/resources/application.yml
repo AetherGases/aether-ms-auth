@@ -14,7 +14,8 @@ spring:
     jwt:
       token:
         secret-key: ${JWT_SECRET:secret}
-        expire-length: ${JWT_EXPIRE_LENGTH:3600000}
+        expire-token-length: ${JWT_TOKEN_EXPIRE_LENGTH:3600000}
+        expire-refresh-length: ${JWT_REFRESH_EXPIRE_LENGTH:86400000}
 
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
@@ -26,7 +27,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD}
+      user: ${REDIS_USER:}
+      password: ${REDIS_PASSWORD:}
 
   jpa:
     hibernate:
@@ -57,3 +59,6 @@ cloudinary:
   cloud_name: ${CLOUDINARY_CLOUD_NAME}
   api_key: ${CLOUDINARY_API_KEY}
   api_secret: ${CLOUDINARY_API_SECRET}
+
+cors:
+  originPatterns: ${CORS_ORIGIN_PATTERNS}

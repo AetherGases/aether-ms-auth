@@ -41,9 +41,13 @@ class ProfileControllerTests {
 
   @Autowired
   private MockMvc mockMvc;
-
+  @Autowired
+  private StorageFileRepository storageFileRepository;
   @Autowired
   private EmployeeRepository employeeRepository;
+
+  @Autowired
+  private AddressRepository addressRepository;
 
   @Autowired
   private DepartmentRepository departmentRepository;
@@ -72,21 +76,41 @@ class ProfileControllerTests {
   private MessageService messageService;
 
   private final List<Integer> ids = new ArrayList<>();
-
+  private StorageFileEntity storageFile;
   private PermissionGroupEntity permissionGroup;
   private EnterpriseEntity enterprise;
   private UnitEntity unit;
   private DepartmentEntity department;
+  private AddressEntity address;
   private EmployeeEntity employeeActive;
 
   private EmployeeEntity employeeInactive;
 
   @BeforeAll
   void beforeAll() {
+    address = new AddressEntity(
+        "12345678",
+        "teste",
+        "teste",
+        "teste",
+        "teste",
+        11,
+        "teste"
+    );
+    addressRepository.save(address);
+
+    storageFile = new StorageFileEntity(
+        "foto.png",
+        "https://cloudinary/teste"
+    );
+
+    storageFileRepository.save(storageFile);
+
     enterprise = new EnterpriseEntity(
         "teste",
         "teste s.a.",
-        "73414740000148"
+        "73414740000148",
+        address
     );
 
     enterpriseRepository.save(enterprise);
@@ -94,7 +118,8 @@ class ProfileControllerTests {
     unit = new UnitEntity(
         "1234567",
         "89307523000199",
-        enterprise
+        enterprise,
+        address
     );
 
     unitRepository.save(unit);
@@ -114,7 +139,7 @@ class ProfileControllerTests {
 
     permissionGroupRepository.save(permissionGroup);
 
-    employeeActive = new EmployeeEntity("12345678902", "Teste", "test@test.com", passwordEncoder.encode("senha123"), "11977394517", EmployeeStatusEnum.ACTIVE, permissionGroup, department);
+    employeeActive = new EmployeeEntity("12345678902", "Teste", "test@test.com", passwordEncoder.encode("senha123"), "11977394517", EmployeeStatusEnum.ACTIVE, permissionGroup, department, storageFile);
 
     employeeInactive = new EmployeeEntity("12345678903", "Teste Inativo", "test2@test.com", passwordEncoder.encode("senha123"), "11977394518", EmployeeStatusEnum.INACTIVE, permissionGroup, department);
 
@@ -138,6 +163,7 @@ class ProfileControllerTests {
     departmentRepository.delete(department);
     unitRepository.delete(unit);
     enterpriseRepository.delete(enterprise);
+    storageFileRepository.delete(storageFile);
   }
 
   private String generateJwt(EmployeeEntity employee) {
@@ -215,7 +241,7 @@ class ProfileControllerTests {
     String token = generateJwt(employeeActive);
 
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", "11988887777", null, null)
+        new UpdateProfileRequestDTO("Novo Nome", "11988887777", null, null, null)
     );
 
     mockMvc.perform(
@@ -234,7 +260,7 @@ class ProfileControllerTests {
     String token = generateJwt(employeeActive);
 
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO(null, null, "novaSenha123", null)
+        new UpdateProfileRequestDTO(null, null, "novaSenha123", null, null)
     );
 
     mockMvc.perform(
@@ -257,7 +283,7 @@ class ProfileControllerTests {
     employeeRepository.save(employeeActive);
 
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", null, null, null)
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null)
     );
 
     mockMvc.perform(
@@ -272,7 +298,7 @@ class ProfileControllerTests {
   @DisplayName("Should return 401 when JWT is not provided")
   void updateProfileWithoutAuthentication() throws Exception {
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", null, null, null)
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null)
     );
 
     mockMvc.perform(
@@ -286,7 +312,7 @@ class ProfileControllerTests {
   @DisplayName("Should return 401 when JWT is invalid")
   void updateProfileWithInvalidToken() throws Exception {
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", null, null, null)
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null)
     );
 
     mockMvc.perform(

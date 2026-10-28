@@ -2,32 +2,31 @@ package com.aether.ms_auth.profile;
 
 import com.aether.ms_auth.profile.dto.input.GetMyProfileInputDTO;
 import com.aether.ms_auth.profile.dto.input.UpdateProfileInputDTO;
-import com.aether.ms_auth.profile.dto.output.GetMyProfileInfosOutputDTO;
 import com.aether.ms_auth.profile.dto.output.GetMyProfileOutputDTO;
 import com.aether.ms_auth.profile.dto.output.UpdateProfileOutputDTO;
 import com.aether.ms_auth.profile.services.ProfileService;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.NotFoundException;
-import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
-import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionEntity;
-import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionGroupEntity;
-import com.aether.ms_auth.shared.persistence.postgres.entities.StorageFileEntity;
+import com.aether.ms_auth.shared.persistence.mongo.documents.DeviceTokenDocument;
+import com.aether.ms_auth.shared.persistence.mongo.repository.DeviceTokenRepository;
+import com.aether.ms_auth.shared.persistence.postgres.entities.*;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.StorageFileRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -44,6 +43,9 @@ public class ProfileServiceTests {
   private StorageFileRepository storageFileRepository;
 
   @Mock
+  private DeviceTokenRepository deviceTokenRepository;
+
+  @Mock
   private PasswordEncoder passwordEncoder;
 
   @InjectMocks
@@ -51,14 +53,12 @@ public class ProfileServiceTests {
 
   @Test
   @DisplayName("Should return an user and its permissions")
-  void getMyProfile(){
+  void getMyProfile() {
     PermissionEntity permission = new PermissionEntity(
         "Permission Test",
-        "A Permission Test"
+        "A Permission Test",
+        ".*"
     );
-
-    GetMyProfileInfosOutputDTO.Permission expectedPermission =
-        new GetMyProfileInfosOutputDTO.Permission(permission);
 
     PermissionGroupEntity permissionGroup = new PermissionGroupEntity(
         "Permission Group Test"
@@ -66,31 +66,99 @@ public class ProfileServiceTests {
 
     permissionGroup.setPermissions(List.of(permission));
 
+    AddressEntity address = new AddressEntity(
+        "89200-000",
+        "SC",
+        "Joinville",
+        "Centro",
+        "Rua Teste",
+        123,
+        "Apto 1"
+    );
+
+    EnterpriseEntity enterprise = new EnterpriseEntity(
+        "teste",
+        "teste S.A",
+        "1234567890123",
+        address
+    );
+
+    UnitEntity unit = new UnitEntity(
+        "1234567",
+        "12345678000190",
+        enterprise,
+        address
+    );
+
+    DepartmentEntity department = new DepartmentEntity(
+        "1234567890123",
+        "Department Test",
+        unit
+    );
+
+    StorageFileEntity image = new StorageFileEntity(
+        "profile.png",
+        "/images/profile.png"
+    );
+
     String cpf = "123.456.789-01";
     String name = "Test";
 
     EmployeeEntity employee = new EmployeeEntity(
-      cpf.replaceAll("[^\\d]", ""),
-      name.toLowerCase(),
-      "test@gmail.com",
-      "1199999999",
-      EmployeeStatusEnum.ACTIVE,
-      permissionGroup
+        cpf.replaceAll("[^\\d]", ""),
+        name.toLowerCase(),
+        "test@gmail.com",
+        "1199999999",
+        EmployeeStatusEnum.ACTIVE,
+        permissionGroup
     );
+
+    employee.setDepartment(department);
+    employee.setStorageFile(image);
 
     GetMyProfileInputDTO input = new GetMyProfileInputDTO(
         employee.getId()
     );
 
-    when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
-        .thenReturn(Optional.of(employee));
+    when(employeeRepository.findByIdAndStatus(
+        employee.getId(),
+        EmployeeStatusEnum.ACTIVE
+    )).thenReturn(Optional.of(employee));
 
     GetMyProfileOutputDTO output = profileService.getMyProfile(input);
 
-    assertEquals(output.cpf(), cpf);
-    assertEquals(output.name(), name);
+    assertEquals(employee.getId(), output.id());
+    assertEquals("123.456.789-01", output.cpf());
+    assertEquals("test@gmail.com", output.email());
+    assertEquals("Test", output.name());
+    assertEquals("(11) 9999-9999", output.phone());
 
-    assertEquals(output.permissions(), List.of(expectedPermission));
+    GetMyProfileOutputDTO.Permission expectedPermission =
+        new GetMyProfileOutputDTO.Permission(
+            permission.getId(),
+            permission.getName(),
+            permission.getDescription()
+        );
+
+    assertEquals(List.of(expectedPermission), output.permissions());
+
+    assertEquals(image.getId(), output.image().id());
+    assertEquals(image.getName(), output.image().name());
+    assertEquals(image.getPath(), output.image().path());
+
+    assertEquals(unit.getId(), output.unit().id());
+    assertEquals(unit.getCnae(), output.unit().cnae());
+    assertEquals(unit.getCnpj(), output.unit().cnpj());
+    assertEquals(unit.getIsActive(), output.unit().isActive());
+
+    assertEquals(address.getId(), output.unit().address().id());
+    assertEquals(address.getZipCode(), output.unit().address().zipCode());
+    assertEquals(address.getState(), output.unit().address().state());
+    assertEquals(address.getCity(), output.unit().address().city());
+    assertEquals(address.getNeighborhood(), output.unit().address().neighborhood());
+    assertEquals(address.getStreet(), output.unit().address().street());
+    assertEquals(address.getNumber(), output.unit().address().number());
+    assertEquals(address.getComplement(), output.unit().address().complement());
   }
 
   @Test
@@ -127,7 +195,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), "Nome Novo", "1188888888", null, null
+        employee.getId(), "Nome Novo", "1188888888", null, null, null
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -149,7 +217,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, "novaSenha", null
+        employee.getId(), null, null, "novaSenha", null, null
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -174,7 +242,7 @@ public class ProfileServiceTests {
 
     UpdateProfileInputDTO.Image image = new UpdateProfileInputDTO.Image("foto.png", "http://cdn/foto.png");
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, null, image
+        employee.getId(), null, null, null, null, image
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -197,7 +265,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, null, null
+        employee.getId(), null, null, null, null, null
     );
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
@@ -209,12 +277,41 @@ public class ProfileServiceTests {
     assertEquals("nome", employee.getName());
     assertEquals("1199999999", employee.getPhone());
     verify(storageFileRepository, org.mockito.Mockito.never()).save(any());
+    verify(deviceTokenRepository, org.mockito.Mockito.never()).save(any());
+  }
+
+  @Test
+  @DisplayName("Should create a new device token document")
+  void updateUserDeviceToken(){
+    EmployeeEntity employee = new EmployeeEntity(
+        "12345678901", "nome", "test@gmail.com", "senhaHash", "1199999999",
+        EmployeeStatusEnum.ACTIVE, null
+    );
+
+    UpdateProfileInputDTO input = new UpdateProfileInputDTO(
+        employee.getId(), null, null, null, "device-token", null
+    );
+
+    when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
+        .thenReturn(Optional.of(employee));
+    when(employeeRepository.save(employee)).thenReturn(employee);
+
+    profileService.updateUser(input);
+
+    ArgumentCaptor<DeviceTokenDocument> captor = ArgumentCaptor.forClass(DeviceTokenDocument.class);
+    verify(deviceTokenRepository).save(captor.capture());
+
+    DeviceTokenDocument document = captor.getValue();
+    assertEquals(employee.getId(), document.getUserId());
+    assertEquals("device-token", document.getToken());
+    assertNotNull(document.getCreatedAt());
+    assertEquals(document.getCreatedAt(), document.getLastUsedAt());
   }
 
   @Test
   @DisplayName("Should throw an exception if does not find the user")
   void updateUserNotFound(){
-    UpdateProfileInputDTO input = new UpdateProfileInputDTO(999, "Nome", null, null, null);
+    UpdateProfileInputDTO input = new UpdateProfileInputDTO(999, "Nome", null, null, null, null);
 
     when(employeeRepository.findByIdAndStatus(999, EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.empty());

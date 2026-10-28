@@ -1,8 +1,8 @@
 package com.aether.ms_auth.shared.security.jwt;
 
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
+import com.aether.ms_auth.shared.persistence.redis.repositories.RevokedRefreshTokensRepository;
 import com.aether.ms_auth.shared.security.UserService;
-import com.aether.ms_auth.shared.services.MessageService;
 import com.auth0.jwt.JWT;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,14 +11,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,14 +28,15 @@ class JwtTokenProviderTests {
   private static final String MANAGE_EMPLOYEES = "Gerenciar funcionários";
 
   @Mock private UserService userService;
-  @Mock private MessageService messageService;
+  @Mock private RevokedRefreshTokensRepository revokedRefreshTokensRepository;
   private JwtTokenProvider provider;
 
   @BeforeEach
   void setUp() {
-    provider = new JwtTokenProvider(userService, messageService);
+    provider = new JwtTokenProvider(userService, revokedRefreshTokensRepository);
     ReflectionTestUtils.setField(provider, "secretKey", "unit-test-secret-not-for-production");
-    ReflectionTestUtils.setField(provider, "validityInMilliseconds", 3600000);
+    ReflectionTestUtils.setField(provider, "tokenValidityInMilliseconds", 3600000);
+    ReflectionTestUtils.setField(provider, "refreshValidityInMilliseconds", 7200000);
     provider.init();
     RequestContextHolder.setRequestAttributes(
         new ServletRequestAttributes(new MockHttpServletRequest())
@@ -64,32 +66,27 @@ class JwtTokenProviderTests {
   }
 
   @Test
-  void refreshUsesNewlyGrantedPermissions() {
+  void refreshUsesCurrentGrantedPermissions() {
     String refreshToken = provider.createAccessToken(
         EMAIL, List.of("Visualizar inventários")).refreshToken();
-    when(userService.loadUserByUsername(EMAIL)).thenReturn(
-        User.withUsername(EMAIL).password("unused")
-            .authorities(MANAGE_EMPLOYEES).build());
+    when(revokedRefreshTokensRepository.revoke(anyString(), any(Duration.class))).thenReturn(true);
 
-    var output = provider.refreshToken("Bearer " + refreshToken);
+    var output = provider.refreshToken("Bearer " + refreshToken, EMAIL, List.of(MANAGE_EMPLOYEES));
 
     assertEquals("administrator", output.role());
     assertEquals(List.of(MANAGE_EMPLOYEES),
         JWT.decode(output.accessToken()).getClaim("roles").asList(String.class));
     assertEquals(List.of(MANAGE_EMPLOYEES),
         JWT.decode(output.refreshToken()).getClaim("roles").asList(String.class));
-    verify(userService).loadUserByUsername(EMAIL);
   }
 
   @Test
   void refreshRemovesRevokedPermissions() {
     String refreshToken = provider.createAccessToken(
         EMAIL, List.of(MANAGE_EMPLOYEES)).refreshToken();
-    when(userService.loadUserByUsername(EMAIL)).thenReturn(
-        User.withUsername(EMAIL).password("unused")
-            .authorities("Visualizar inventários").build());
+    when(revokedRefreshTokensRepository.revoke(anyString(), any(Duration.class))).thenReturn(true);
 
-    var output = provider.refreshToken(refreshToken);
+    var output = provider.refreshToken(refreshToken, EMAIL, List.of("Visualizar inventários"));
 
     assertEquals("analyst", output.role());
     assertEquals(List.of("Visualizar inventários"),
@@ -99,11 +96,21 @@ class JwtTokenProviderTests {
   }
 
   @Test
-  void refreshRejectsInactiveOrMissingUser() {
+  void refreshCannotBeReused() {
     String refreshToken = provider.createAccessToken(EMAIL, List.of()).refreshToken();
-    when(userService.loadUserByUsername(EMAIL))
-        .thenThrow(new UnauthorizedException("User unavailable"));
+    when(revokedRefreshTokensRepository.revoke(anyString(), any(Duration.class))).thenReturn(true, false);
 
-    assertThrows(UnauthorizedException.class, () -> provider.refreshToken(refreshToken));
+    var renewed = provider.refreshToken(refreshToken, EMAIL, List.of());
+    assertNotEquals(JWT.decode(refreshToken).getId(), JWT.decode(renewed.refreshToken()).getId());
+    assertThrows(UnauthorizedException.class,
+        () -> provider.refreshToken(refreshToken, EMAIL, List.of()));
+  }
+
+  @Test
+  void refreshRejectsAnotherUser() {
+    String refreshToken = provider.createAccessToken(EMAIL, List.of()).refreshToken();
+    assertThrows(UnauthorizedException.class,
+        () -> provider.refreshToken(refreshToken, "another@example.com", List.of()));
+    verifyNoInteractions(revokedRefreshTokensRepository);
   }
 }

@@ -2,7 +2,6 @@ package com.aether.ms_auth.auth.controllers;
 
 import com.aether.ms_auth.auth.dto.input.RefreshTokenInputDTO;
 import com.aether.ms_auth.auth.dto.output.LoginOutputDTO;
-import com.aether.ms_auth.auth.dto.output.RegisterOutputDTO;
 import com.aether.ms_auth.auth.dto.output.ResetPasswordValidateCodeOutputDTO;
 import com.aether.ms_auth.auth.dto.request.*;
 import com.aether.ms_auth.auth.mappers.AuthMapper;
@@ -105,21 +104,5 @@ public class AuthController implements AuthControllerDocs {
     this.authService.changePassword(AuthMapper.convertChangePasswordToInput(input));
 
     return ResponseEntity.noContent().build();
-  }
-
-  // TO DO: remove this route after SQL's dataload is ready to execute, registering users is a first year responsability
-  @Override
-  @PostMapping("/register")
-  public ResponseEntity<RegisterOutputDTO> register(
-      @RequestBody
-      @Valid
-      RegisterRequestDTO input
-  ){
-    return new ResponseEntity<>(
-        this.authService.register(
-            AuthMapper.convertRegisterRequestToInput(input)
-        ),
-        HttpStatus.CREATED
-    );
   }
 }

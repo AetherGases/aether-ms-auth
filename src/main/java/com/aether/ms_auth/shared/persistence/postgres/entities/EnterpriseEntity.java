@@ -50,4 +50,11 @@ public class EnterpriseEntity extends DateBaseEntity{
     this.tradeName = tradeName;
     this.cnpj = cnpj;
   }
+
+  public EnterpriseEntity(String name, String tradeName, String cnpj, AddressEntity address) {
+    this.name = name;
+    this.tradeName = tradeName;
+    this.cnpj = cnpj;
+    this.address = address;
+  }
 }
