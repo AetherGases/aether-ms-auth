@@ -20,6 +20,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
   private final HandlerExceptionResolver handlerExceptionResolver;
 
+  private static final String REFRESH_PATH_PREFIX = "/api/auth/refresh/";
+
+  /**
+   * The refresh endpoint is public and receives the *refresh* token in the Authorization header.
+   * It must not be parsed here as an access token: doing so rejected the request with 401 before
+   * the controller could validate the e-mail path variable (400) or the refresh token itself.
+   */
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    return request.getRequestURI().startsWith(REFRESH_PATH_PREFIX);
+  }
+
   @Override
   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filter)
       throws IOException, ServletException {

@@ -27,7 +27,11 @@ public class NotificationDocument {
 
   @Indexed(expireAfter = "2d")
   private Instant createdAt;
-  class Inventory{
+
+  @NoArgsConstructor
+  @Getter
+  @Setter
+  public static class Inventory{
     private Integer id;
     private InventoryStatusEnum status;
     private InventoryTypeEnum type;
