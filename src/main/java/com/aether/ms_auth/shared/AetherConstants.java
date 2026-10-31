@@ -127,6 +127,14 @@ public final class AetherConstants {
   public static final int MAX_EMISSION_METHODOLOGY_DESCRIPTION_LENGTH = 150;
   public static final int MIN_EMISSION_METHODOLOGY_DESCRIPTION_LENGTH = 3;
 
+//  Report problem
+
+  public static final int MAX_REPORT_PROBLEM_SCREEN_LENGTH = 50;
+  public static final int MIN_REPORT_PROBLEM_SCREEN_LENGTH = 2;
+
+  public static final int MAX_REPORT_PROBLEM_DESCRIPTION_LENGTH = 500;
+  public static final int MIN_REPORT_PROBLEM_DESCRIPTION_LENGTH = 3;
+
   // Pagination
 
   public static final int MIN_SKIP = 0;
