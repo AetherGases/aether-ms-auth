@@ -15,8 +15,14 @@ public record GetMyProfileOutputDTO(
     List<Permission> permissions,
     Enterprise enterprise,
     Unit unit,
-    Department department
+    Department department,
+    Notifications notifications
 ) {
+  public record Notifications(
+      Boolean email,
+      Boolean mobile
+  ){}
+
   public record Permission(
       Integer id,
       String name,

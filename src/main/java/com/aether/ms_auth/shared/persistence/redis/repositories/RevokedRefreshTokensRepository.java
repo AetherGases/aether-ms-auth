@@ -15,8 +15,6 @@ public class RevokedRefreshTokensRepository {
   public RevokedRefreshTokensRepository(RedisTemplate<String, Object> redisTemplate) {
     this.redisTemplate = redisTemplate;
   }
-
-  // Atomically marks the token as used; returns false if it had already been revoked
   public boolean revoke(String tokenId, Duration ttl) {
     return Boolean.TRUE.equals(
         redisTemplate.opsForValue().setIfAbsent(KEY_PREFIX + tokenId, Boolean.TRUE, ttl)

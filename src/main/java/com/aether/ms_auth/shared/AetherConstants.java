@@ -5,6 +5,8 @@ public final class AetherConstants {
   private AetherConstants() {}
 
   public static final int MIN_AGE = 18;
+  public static final int DEFAULT_TAKE = 20;
+  public static final int DEFAULT_SKIP = 0;
 
   public static final int KEY_LENGTH = 36;
 
@@ -124,4 +126,11 @@ public final class AetherConstants {
 
   public static final int MAX_EMISSION_METHODOLOGY_DESCRIPTION_LENGTH = 150;
   public static final int MIN_EMISSION_METHODOLOGY_DESCRIPTION_LENGTH = 3;
+
+  // Pagination
+
+  public static final int MIN_SKIP = 0;
+
+  public static final int MIN_TAKE = 1;
+  public static final int MAX_TAKE = 100;
 }
