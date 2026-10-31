@@ -8,7 +8,6 @@ import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.BadRequestException;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
 import com.aether.ms_auth.shared.helpers.interfaces.BrevoTemplate;
-import com.aether.ms_auth.shared.persistence.mongo.repository.DeviceTokenRepository;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionEntity;
 import com.aether.ms_auth.shared.persistence.postgres.entities.PermissionGroupEntity;
@@ -28,7 +27,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,9 +44,6 @@ public class AuthServiceTests {
 
   @Mock
   private GeneratedCodesRepository generatedCodesRepository;
-
-  @Mock
-  private DeviceTokenRepository deviceTokenRepository;
 
   @Mock
   private AuthenticationManager authenticationManager;
@@ -118,7 +113,6 @@ public class AuthServiceTests {
     assertEquals(output.email(), input.email());
     assertEquals(output.authenticated(), true);
     assertEquals("analyst", output.role());
-    verify(deviceTokenRepository).updateLastUsedAtByUserId(eq(expectedEntity.getId()), any(Instant.class));
   }
 
   @Test

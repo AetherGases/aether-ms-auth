@@ -3,6 +3,7 @@ package com.aether.ms_auth.profile.dto.request;
 import com.aether.ms_auth.shared.AetherConstants;
 import com.aether.ms_auth.shared.helpers.RegexPatterns;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -60,8 +61,19 @@ public record UpdateProfileRequestDTO(
     )
     String deviceToken,
 
+    @Valid
+    NotificationsRequest notifications,
+
     ImageRequest image
 ) {
+  public record NotificationsRequest(
+      @Schema(description = "Permite notificações por e-mail", example = "true")
+      Boolean email,
+
+      @Schema(description = "Permite notificações mobile", example = "true")
+      Boolean mobile
+  ) {}
+
   public record ImageRequest(
       @NotEmpty(message = "{validation.image-name.required}")
       @Size(

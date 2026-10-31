@@ -6,8 +6,14 @@ public record UpdateProfileInputDTO(
     String phone,
     String newPassword,
     String deviceToken,
+    Notifications notifications,
     Image image
 ) {
+
+  public record Notifications(
+      Boolean email,
+      Boolean mobile
+  ) {}
 
   public record Image(
       String imageName,

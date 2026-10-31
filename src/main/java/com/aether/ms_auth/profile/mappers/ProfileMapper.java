@@ -6,11 +6,13 @@ import com.aether.ms_auth.profile.dto.output.UpdateProfileOutputDTO;
 import com.aether.ms_auth.profile.dto.request.UpdateProfileRequestDTO;
 import com.aether.ms_auth.shared.helpers.NormalizeInput;
 import com.aether.ms_auth.shared.helpers.NormalizeOutput;
+import com.aether.ms_auth.shared.persistence.mongo.documents.NotificationConfigDocument;
 import com.aether.ms_auth.shared.persistence.postgres.entities.*;
 
 public class ProfileMapper {
   public static GetMyProfileOutputDTO convertEntityToGetProfileOutput(
-      EmployeeEntity entity
+      EmployeeEntity entity,
+      NotificationConfigDocument.Notify notify
   ) {
     DepartmentEntity department = entity.getDepartment();
     UnitEntity unit = department.getUnit();
@@ -84,6 +86,11 @@ public class ProfileMapper {
             department.getId(),
             department.getName(),
             department.getDescription()
+        ),
+
+        new GetMyProfileOutputDTO.Notifications(
+            Boolean.TRUE.equals(notify.getEmail()),
+            Boolean.TRUE.equals(notify.getMobile())
         )
     );
   }
@@ -95,6 +102,11 @@ public class ProfileMapper {
         NormalizeInput.phone(request.phone()),
         NormalizeInput.password(request.newPassword()),
         request.deviceToken() != null ? request.deviceToken().trim() : null,
+        request.notifications() != null
+            ? new UpdateProfileInputDTO.Notifications(
+            request.notifications().email(),
+            request.notifications().mobile()
+        ) : null,
         request.image() != null
             ? new UpdateProfileInputDTO.Image(
             request.image().imageName(),
@@ -103,13 +115,20 @@ public class ProfileMapper {
     );
   }
 
-  public static UpdateProfileOutputDTO convertEntityToUpdateProfileOutput(EmployeeEntity entity){
+  public static UpdateProfileOutputDTO convertEntityToUpdateProfileOutput(
+      EmployeeEntity entity,
+      NotificationConfigDocument.Notify notify
+  ){
     return new UpdateProfileOutputDTO(
         entity.getId(),
         NormalizeOutput.name(entity.getName()),
         NormalizeOutput.cpf(entity.getCpf()),
         NormalizeOutput.email(entity.getEmail()),
-        NormalizeOutput.phone(entity.getPhone())
+        NormalizeOutput.phone(entity.getPhone()),
+        new UpdateProfileOutputDTO.Notifications(
+            Boolean.TRUE.equals(notify.getEmail()),
+            Boolean.TRUE.equals(notify.getMobile())
+        )
     );
   }
 }

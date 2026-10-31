@@ -241,7 +241,7 @@ class ProfileControllerTests {
     String token = generateJwt(employeeActive);
 
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", "11988887777", null, null, null)
+        new UpdateProfileRequestDTO("Novo Nome", "11988887777", null, null, null, null)
     );
 
     mockMvc.perform(
@@ -260,7 +260,7 @@ class ProfileControllerTests {
     String token = generateJwt(employeeActive);
 
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO(null, null, "novaSenha123", null, null)
+        new UpdateProfileRequestDTO(null, null, "novaSenha123", null, null, null)
     );
 
     mockMvc.perform(
@@ -283,7 +283,7 @@ class ProfileControllerTests {
     employeeRepository.save(employeeActive);
 
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null)
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null, null)
     );
 
     mockMvc.perform(
@@ -298,7 +298,7 @@ class ProfileControllerTests {
   @DisplayName("Should return 401 when JWT is not provided")
   void updateProfileWithoutAuthentication() throws Exception {
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null)
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null, null)
     );
 
     mockMvc.perform(
@@ -312,7 +312,7 @@ class ProfileControllerTests {
   @DisplayName("Should return 401 when JWT is invalid")
   void updateProfileWithInvalidToken() throws Exception {
     String body = new ObjectMapper().writeValueAsString(
-        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null)
+        new UpdateProfileRequestDTO("Novo Nome", null, null, null, null, null)
     );
 
     mockMvc.perform(

@@ -7,8 +7,8 @@ import com.aether.ms_auth.profile.dto.output.UpdateProfileOutputDTO;
 import com.aether.ms_auth.profile.services.ProfileService;
 import com.aether.ms_auth.shared.enums.EmployeeStatusEnum;
 import com.aether.ms_auth.shared.exceptions.NotFoundException;
-import com.aether.ms_auth.shared.persistence.mongo.documents.DeviceTokenDocument;
-import com.aether.ms_auth.shared.persistence.mongo.repository.DeviceTokenRepository;
+import com.aether.ms_auth.shared.persistence.mongo.documents.NotificationConfigDocument;
+import com.aether.ms_auth.shared.persistence.mongo.repository.NotificationConfigRepository;
 import com.aether.ms_auth.shared.persistence.postgres.entities.*;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.StorageFileRepository;
@@ -22,14 +22,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.when;
 
 @ActiveProfiles("test")
@@ -43,7 +42,7 @@ public class ProfileServiceTests {
   private StorageFileRepository storageFileRepository;
 
   @Mock
-  private DeviceTokenRepository deviceTokenRepository;
+  private NotificationConfigRepository notificationConfigRepository;
 
   @Mock
   private PasswordEncoder passwordEncoder;
@@ -199,8 +198,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), "Nome Novo", "1188888888", null, null, null
-    );
+        employee.getId(), "Nome Novo", "1188888888", null, null, null, null);
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.of(employee));
@@ -221,8 +219,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, "1188888888", null, null, null
-    );
+        employee.getId(), null, "1188888888", null, null, null, null);
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.of(employee));
@@ -242,8 +239,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, "novaSenha", null, null
-    );
+        employee.getId(), null, null, "novaSenha", null, null, null);
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.of(employee));
@@ -267,8 +263,7 @@ public class ProfileServiceTests {
 
     UpdateProfileInputDTO.Image image = new UpdateProfileInputDTO.Image("foto.png", "http://cdn/foto.png");
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, null, null, image
-    );
+        employee.getId(), null, null, null, null, null, image);
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.of(employee));
@@ -290,8 +285,7 @@ public class ProfileServiceTests {
     );
 
     UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, null, null, null
-    );
+        employee.getId(), null, null, null, null, null, null);
 
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.of(employee));
@@ -302,41 +296,132 @@ public class ProfileServiceTests {
     assertEquals("nome", employee.getName());
     assertEquals("1199999999", employee.getPhone());
     verify(storageFileRepository, org.mockito.Mockito.never()).save(any());
-    verify(deviceTokenRepository, org.mockito.Mockito.never()).save(any());
+    verify(notificationConfigRepository, org.mockito.Mockito.never()).save(any());
   }
 
-  @Test
-  @DisplayName("Should create a new device token document")
-  void updateUserDeviceToken(){
+  private EmployeeEntity activeEmployee(){
     EmployeeEntity employee = new EmployeeEntity(
         "12345678901", "nome", "test@gmail.com", "senhaHash", "1199999999",
         EmployeeStatusEnum.ACTIVE, null
     );
-
-    UpdateProfileInputDTO input = new UpdateProfileInputDTO(
-        employee.getId(), null, null, null, "device-token", null
-    );
-
     when(employeeRepository.findByIdAndStatus(employee.getId(), EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.of(employee));
-    when(employeeRepository.save(employee)).thenReturn(employee);
+    return employee;
+  }
 
-    profileService.updateUser(input);
+  private UpdateProfileInputDTO tokenInput(EmployeeEntity employee, String token, UpdateProfileInputDTO.Notifications notifications){
+    return new UpdateProfileInputDTO(employee.getId(), null, null, null, token, notifications, null);
+  }
 
-    ArgumentCaptor<DeviceTokenDocument> captor = ArgumentCaptor.forClass(DeviceTokenDocument.class);
-    verify(deviceTokenRepository).save(captor.capture());
+  private NotificationConfigDocument savedConfig(){
+    ArgumentCaptor<NotificationConfigDocument> captor = ArgumentCaptor.forClass(NotificationConfigDocument.class);
+    verify(notificationConfigRepository, atLeastOnce()).save(captor.capture());
+    return captor.getValue();
+  }
 
-    DeviceTokenDocument document = captor.getValue();
+  private NotificationConfigDocument configWithTokens(Integer userId, String... tokens){
+    NotificationConfigDocument config = new NotificationConfigDocument(userId);
+    for (String token : tokens) {
+      config.getTokens().add(new NotificationConfigDocument.Token(token, Instant.EPOCH, Instant.EPOCH));
+    }
+    return config;
+  }
+
+  @Test
+  @DisplayName("Should persist a valid device token")
+  void updateUserValidDeviceToken(){
+    EmployeeEntity employee = activeEmployee();
+    when(notificationConfigRepository.findByUserId(employee.getId())).thenReturn(Optional.empty());
+
+    profileService.updateUser(tokenInput(employee, "token-A", null));
+
+    verify(notificationConfigRepository).save(any(NotificationConfigDocument.class));
+
+    NotificationConfigDocument document = savedConfig();
     assertEquals(employee.getId(), document.getUserId());
-    assertEquals("device-token", document.getToken());
-    assertNotNull(document.getCreatedAt());
-    assertEquals(document.getCreatedAt(), document.getLastUsedAt());
+    assertEquals(1, document.getTokens().size());
+    assertEquals("token-A", document.getTokens().get(0).getToken());
+    assertNotNull(document.getTokens().get(0).getCreatedAt());
+  }
+
+  @Test
+  @DisplayName("Should not duplicate an existing token and should refresh its last use on every login")
+  void updateUserExistingDeviceToken(){
+    EmployeeEntity employee = activeEmployee();
+    NotificationConfigDocument existing = configWithTokens(employee.getId(), "token-A");
+    when(notificationConfigRepository.findByUserId(employee.getId())).thenReturn(Optional.of(existing));
+
+    profileService.updateUser(tokenInput(employee, "token-A", null));
+    profileService.updateUser(tokenInput(employee, "token-A", null));
+
+    assertEquals(1, existing.getTokens().size());
+    assertTrue(existing.getTokens().get(0).getLastUsedAt().isAfter(Instant.EPOCH));
+    assertEquals(Instant.EPOCH, existing.getTokens().get(0).getCreatedAt());
+  }
+
+  @Test
+  @DisplayName("Should keep multiple device tokens for the same user")
+  void updateUserMultipleDevices(){
+    EmployeeEntity employee = activeEmployee();
+    NotificationConfigDocument existing = configWithTokens(employee.getId(), "token-A");
+    when(notificationConfigRepository.findByUserId(employee.getId())).thenReturn(Optional.of(existing));
+
+    profileService.updateUser(tokenInput(employee, "token-B", null));
+
+    assertEquals(
+        List.of("token-A", "token-B"),
+        existing.getTokens().stream().map(NotificationConfigDocument.Token::getToken).toList()
+    );
+  }
+
+  @Test
+  @DisplayName("Should move a token owned by another user to the authenticated user")
+  void updateUserTokenOwnedByAnotherUser(){
+    EmployeeEntity employee = activeEmployee();
+    when(notificationConfigRepository.findByUserId(employee.getId())).thenReturn(Optional.empty());
+
+    NotificationConfigDocument other = configWithTokens(99, "token-A");
+    when(notificationConfigRepository.findByTokensToken("token-A")).thenReturn(List.of(other));
+
+    profileService.updateUser(tokenInput(employee, "token-A", null));
+
+    assertTrue(other.getTokens().isEmpty());
+    verify(notificationConfigRepository).save(other);
+    assertEquals("token-A", savedConfig().getTokens().get(0).getToken());
+  }
+
+  @Test
+  @DisplayName("Should update only notification preferences without a token")
+  void updateUserOnlyNotifications(){
+    EmployeeEntity employee = activeEmployee();
+    NotificationConfigDocument existing = configWithTokens(employee.getId(), "token-A");
+    when(notificationConfigRepository.findByUserId(employee.getId())).thenReturn(Optional.of(existing));
+
+    profileService.updateUser(tokenInput(employee, null, new UpdateProfileInputDTO.Notifications(false, true)));
+
+    assertFalse(existing.getNotify().getEmail());
+    assertTrue(existing.getNotify().getMobile());
+    assertEquals(1, existing.getTokens().size());
+  }
+
+  @Test
+  @DisplayName("A token must not change notification preferences")
+  void updateUserTokenDoesNotChangePreferences(){
+    EmployeeEntity employee = activeEmployee();
+    NotificationConfigDocument existing = new NotificationConfigDocument(employee.getId());
+    existing.getNotify().setMobile(false);
+    when(notificationConfigRepository.findByUserId(employee.getId())).thenReturn(Optional.of(existing));
+
+    profileService.updateUser(tokenInput(employee, "token-A", null));
+
+    assertFalse(existing.getNotify().getMobile());
+    assertNull(existing.getNotify().getEmail());
   }
 
   @Test
   @DisplayName("Should throw an exception if does not find the user")
   void updateUserNotFound(){
-    UpdateProfileInputDTO input = new UpdateProfileInputDTO(999, "Nome", null, null, null, null);
+    UpdateProfileInputDTO input = new UpdateProfileInputDTO(999, "Nome", null, null, null, null, null);
 
     when(employeeRepository.findByIdAndStatus(999, EmployeeStatusEnum.ACTIVE))
         .thenReturn(Optional.empty());

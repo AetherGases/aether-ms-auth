@@ -5,6 +5,11 @@ public record UpdateProfileOutputDTO(
     String name,
     String cpf,
     String email,
-    String phone
+    String phone,
+    Notifications notifications
 ) {
+  public record Notifications(
+      Boolean email,
+      Boolean mobile
+  ){}
 }

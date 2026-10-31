@@ -8,7 +8,6 @@ import com.aether.ms_auth.shared.exceptions.BadRequestException;
 import com.aether.ms_auth.shared.exceptions.UnauthorizedException;
 import com.aether.ms_auth.shared.helpers.NormalizeOutput;
 import com.aether.ms_auth.shared.helpers.templates.SendCodeTemplate;
-import com.aether.ms_auth.shared.persistence.mongo.repository.DeviceTokenRepository;
 import com.aether.ms_auth.shared.persistence.postgres.entities.EmployeeEntity;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.EmployeeRepository;
 import com.aether.ms_auth.shared.persistence.redis.entities.GeneratedCodesDocument;
@@ -22,7 +21,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.Random;
 import java.util.UUID;
 
@@ -35,7 +33,6 @@ public class AuthService {
 
   private final EmployeeRepository employeeRepository;
   private final GeneratedCodesRepository generatedCodesRepository;
-  private final DeviceTokenRepository deviceTokenRepository;
 
   private final PasswordEncoder passwordEncoder;
   private final BrevoService brevoService;
@@ -55,8 +52,6 @@ public class AuthService {
         () -> new BadRequestException("exception.login.invalid")
     );
 
-    deviceTokenRepository.updateLastUsedAtByUserId(employee.getId(), Instant.now());
-
     return tokenProvider.createAccessToken(
         input.email(),
         employee.getPermissionGroup().getPermissions().stream().map(permission -> permission.getName()).toList()
@@ -67,8 +62,6 @@ public class AuthService {
     EmployeeEntity employee = employeeRepository.findByEmailAndStatus(input.email(), EmployeeStatusEnum.ACTIVE).orElseThrow(
         () -> new BadRequestException("exception.login.invalid")
     );
-
-    deviceTokenRepository.updateLastUsedAtByUserId(employee.getId(), Instant.now());
 
     return tokenProvider.refreshToken(input.refreshToken(), employee.getEmail(), employee.getPermissionGroup().getPermissions().stream().map(p -> p.getName()).toList());
   }
