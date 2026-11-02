@@ -58,6 +58,7 @@ class NotificationControllerTests {
     ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
     messageSource.setBasename("messages/messages");
     messageSource.setDefaultEncoding("UTF-8");
+    messageSource.setFallbackToSystemLocale(false);
 
     LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
     validator.setValidationMessageSource(messageSource);
