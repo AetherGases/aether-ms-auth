@@ -20,10 +20,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.servlet.i18n.FixedLocaleResolver;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,6 +66,7 @@ class NotificationControllerTests {
     mockMvc = MockMvcBuilders.standaloneSetup(new NotificationController(notificationService))
         .setControllerAdvice(new GlobalExceptionHandler(null))
         .setValidator(validator)
+        .setLocaleResolver(new FixedLocaleResolver(Locale.forLanguageTag("pt-BR")))
         .build();
 
     CustomUserDetails user = new CustomUserDetails("user@test.com", "x", List.of(), USER_ID);
