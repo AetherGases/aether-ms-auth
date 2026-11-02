@@ -6,7 +6,6 @@ import com.aether.ms_auth.shared.enums.ProblemCategoryEnum;
 import com.aether.ms_auth.shared.persistence.postgres.entities.*;
 import com.aether.ms_auth.shared.persistence.postgres.repositories.*;
 import com.aether.ms_auth.shared.security.jwt.JwtTokenProvider;
-import com.aether.ms_auth.shared.services.MessageService;
 import com.aether.ms_auth.support.dto.request.RegisterSupportMessageRequestDTO;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -20,7 +19,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -79,9 +77,6 @@ public class SupportControllerTests {
 
   @Value("${spring.security.jwt.token.expire-length}")
   private Integer jwtExpiration;
-
-  @MockitoBean
-  private MessageService messageService;
 
   private final List<Integer> ids = new ArrayList<>();
   private final List<Integer> problemIds = new ArrayList<>();
@@ -218,6 +213,18 @@ public class SupportControllerTests {
         .andExpect(jsonPath("$[0].code").value("ERROR"))
         .andExpect(jsonPath("$[0].label").value("Erro"))
         .andExpect(jsonPath("$[?(@.code == 'LOGIN_AND_ACCOUNT')].label").value("Login e conta"));
+  }
+
+  @Test
+  @DisplayName("Should return the category labels in English when Accept-Language is en")
+  void findCategoriesInEnglish() throws Exception {
+    mockMvc.perform(
+            get("/api/support/categories")
+                .header("Authorization", "Bearer " + generateJwt(employeeActive))
+                .header("Accept-Language", "en"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].label").value("Error"))
+        .andExpect(jsonPath("$[?(@.code == 'LOGIN_AND_ACCOUNT')].label").value("Login and account"));
   }
 
   @Test
