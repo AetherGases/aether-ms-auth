@@ -8,6 +8,7 @@ import com.aether.ms_auth.shared.persistence.postgres.repositories.StorageFileRe
 import com.aether.ms_auth.support.dto.input.RegisterSupportMessageInputDTO;
 import com.aether.ms_auth.support.dto.output.FindProblemCategoriesOutputDTO;
 import com.aether.ms_auth.support.dto.output.RegisterSupportMessageOutputDTO;
+import com.aether.ms_auth.shared.services.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +21,11 @@ import java.util.List;
 public class SupportService {
   private final ReportedProblemRepository reportedProblemRepository;
   private final StorageFileRepository storageFileRepository;
+  private final MessageService messageService;
 
   public List<FindProblemCategoriesOutputDTO> findProblemCategories() {
     return Arrays.stream(ProblemCategoryEnum.values())
-        .map(category -> new FindProblemCategoriesOutputDTO(category.name(), category.getLabel()))
+        .map(category -> new FindProblemCategoriesOutputDTO(category.name(), messageService.getMessage(category.getMessageKey())))
         .toList();
   }
 

@@ -1,23 +1,18 @@
 package com.aether.ms_auth.shared.enums;
 
 public enum ProblemCategoryEnum {
-  ERROR("Erro"),
-  BUG("Bug"),
-  LOGIN_AND_ACCOUNT("Login e conta"),
-  INTERFACE_AND_NAVIGATION("Interface e navegação"),
-  PERFORMANCE("Desempenho"),
-  DATA_AND_INFORMATION("Dados e informações"),
-  PAYMENT("Pagamento"),
-  PRIVACY("Privacidade"),
-  OTHERS("Outros");
+  ERROR,
+  BUG,
+  LOGIN_AND_ACCOUNT,
+  INTERFACE_AND_NAVIGATION,
+  PERFORMANCE,
+  DATA_AND_INFORMATION,
+  PAYMENT,
+  PRIVACY,
+  OTHERS;
 
-  private final String label;
-
-  ProblemCategoryEnum(String label) {
-    this.label = label;
-  }
-
-  public String getLabel() {
-    return label;
+  /** Chave do messages.properties com o rótulo da categoria, traduzido conforme o Accept-Language. */
+  public String getMessageKey() {
+    return "problem-category." + name();
   }
 }

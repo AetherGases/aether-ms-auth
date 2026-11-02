@@ -221,6 +221,18 @@ public class SupportControllerTests {
   }
 
   @Test
+  @DisplayName("Should return the category labels in English when Accept-Language is en")
+  void findCategoriesInEnglish() throws Exception {
+    mockMvc.perform(
+            get("/api/support/categories")
+                .header("Authorization", "Bearer " + generateJwt(employeeActive))
+                .header("Accept-Language", "en"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].label").value("Error"))
+        .andExpect(jsonPath("$[?(@.code == 'LOGIN_AND_ACCOUNT')].label").value("Login and account"));
+  }
+
+  @Test
   @DisplayName("Should return 401 when JWT is not provided")
   void reportProblemWhenJwtIsNotProvided() throws Exception {
     long before = reportedProblemRepository.count();
