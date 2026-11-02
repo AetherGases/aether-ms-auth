@@ -132,7 +132,7 @@ public final class AetherConstants {
   public static final int MAX_REPORT_PROBLEM_SCREEN_LENGTH = 50;
   public static final int MIN_REPORT_PROBLEM_SCREEN_LENGTH = 2;
 
-  public static final int MAX_REPORT_PROBLEM_DESCRIPTION_LENGTH = 500;
+  public static final int MAX_REPORT_PROBLEM_DESCRIPTION_LENGTH = 200;
   public static final int MIN_REPORT_PROBLEM_DESCRIPTION_LENGTH = 3;
 
   // Pagination

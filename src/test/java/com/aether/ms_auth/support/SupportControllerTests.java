@@ -33,6 +33,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -197,6 +198,26 @@ public class SupportControllerTests {
             .contentType(MediaType.APPLICATION_JSON)
             .content(body)
     );
+  }
+
+  @Test
+  @DisplayName("Should return 401 on the categories route when JWT is not provided")
+  void findCategoriesWithoutJwt() throws Exception {
+    mockMvc.perform(get("/api/support/categories"))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @DisplayName("Should return every problem category with its code and label")
+  void findCategories() throws Exception {
+    mockMvc.perform(
+            get("/api/support/categories")
+                .header("Authorization", "Bearer " + generateJwt(employeeActive)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(ProblemCategoryEnum.values().length))
+        .andExpect(jsonPath("$[0].code").value("ERROR"))
+        .andExpect(jsonPath("$[0].label").value("Erro"))
+        .andExpect(jsonPath("$[?(@.code == 'LOGIN_AND_ACCOUNT')].label").value("Login e conta"));
   }
 
   @Test

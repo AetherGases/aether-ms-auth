@@ -1,5 +1,6 @@
 package com.aether.ms_auth.support.controllers;
 
+import com.aether.ms_auth.support.dto.output.FindProblemCategoriesOutputDTO;
 import com.aether.ms_auth.support.dto.output.RegisterSupportMessageOutputDTO;
 import com.aether.ms_auth.support.dto.request.RegisterSupportMessageRequestDTO;
 import com.aether.ms_auth.support.mappers.SupportMapper;
@@ -9,10 +10,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @Tag(name = "Support", description = "Rotas para suporte e reporte de problemas.")
 @RestController
@@ -20,6 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SupportController {
   private final SupportService supportService;
+
+  @GetMapping("/categories")
+  public ResponseEntity<List<FindProblemCategoriesOutputDTO>> findProblemCategories() {
+    return new ResponseEntity<>(this.supportService.findProblemCategories(), HttpStatus.OK);
+  }
 
   @PostMapping
   public ResponseEntity<RegisterSupportMessageOutputDTO> registerSupportMessage(
